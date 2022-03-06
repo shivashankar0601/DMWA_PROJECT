@@ -20,7 +20,7 @@ public class QueryProcessor {
             int option = 0;
             System.out.println("Welcome to Query Processor");
             do {
-                System.out.println("Query : ");
+                System.out.print("Query : ");
                 String query = input.readLine();
                 switch(queryParser(query)){
                     case 0: // for both create and use database queries, we should return zero from query processor
@@ -42,7 +42,7 @@ public class QueryProcessor {
     }
 
     public int queryParser(String query){
-        int response = -1;
+        int response = 0;
 
 
         return response;

@@ -139,7 +139,7 @@ public class LoginPage {
         } catch (IOException e) {
             System.out.println(e.getLocalizedMessage());
         }
-        Menu menu = new Menu(input, currentUser, Utils.std_path+"/"+user);
+        Menu menu = new Menu(input, currentUser, Utils.std_path+"/"+user+"/");
         menu.displayMenu();
 
     }
