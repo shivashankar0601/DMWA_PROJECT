@@ -1,8 +1,10 @@
+package UIAndSecurity;
+
 import java.io.*;
-import java.nio.Buffer;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Scanner;
+
+import Utilities.Utils;
 
 public class LoginPage {
 
@@ -19,7 +21,7 @@ public class LoginPage {
 
             System.out.println("Welcome to Distributed Database Management System");
             do {
-                System.out.print("Kindly select one of the below options\n1. Login\n2. Register\nkindly enter your selection (enter 0 to quit): ");
+                System.out.print("Kindly select one of the below options\n1. Login\n2. Register\nkindly enter your selection (enter 0 to exit): ");
                 option = Integer.parseInt(input.readLine());
                 switch(option){
                     case 0:
@@ -66,43 +68,46 @@ public class LoginPage {
 
     private void createNewUser(Map<String, UserCredentials> credentials, BufferedReader input, String path) {
         StringBuilder sb = new StringBuilder();
+        String user = null;
         String line = null;
         try {
             while(true) {
                 System.out.print("Kindly enter username : ");
-                line = Utils.hashWithMD5(input.readLine());
+                user = input.readLine();
+                line = Utils.hashWithMD5(user);
                 if(credentials.containsKey(line)){
                     System.out.println("Username already in use, kindly try a different one");
                 }
                 else
                     break;
             }
-            sb.append(line.trim()+Utils.delemiter);
+            sb.append(line.trim()+ Utils.delemiter);
             System.out.print("Kindly enter password : ");
             line = Utils.hashWithMD5(input.readLine());
-            sb.append(line.trim()+Utils.delemiter);
+            sb.append(line.trim()+ Utils.delemiter);
             System.out.print("Kindly enter your 1st security question : ");
             line = input.readLine();
-            sb.append(line.trim()+Utils.delemiter);
+            sb.append(line.trim()+ Utils.delemiter);
             System.out.print("Kindly enter your answer : ");
             line = input.readLine();
-            sb.append(line.trim()+Utils.delemiter);
+            sb.append(line.trim()+ Utils.delemiter);
             System.out.print("Kindly enter your 2nd security question : ");
             line = input.readLine();
-            sb.append(line.trim()+Utils.delemiter);
+            sb.append(line.trim()+ Utils.delemiter);
             System.out.print("Kindly enter your answer : ");
             line = input.readLine();
-            sb.append(line.trim()+Utils.delemiter);
+            sb.append(line.trim()+ Utils.delemiter);
             System.out.print("Kindly enter your 3rd security question : ");
             line = input.readLine();
-            sb.append(line.trim()+Utils.delemiter);
+            sb.append(line.trim()+ Utils.delemiter);
             System.out.print("Kindly enter your answer : ");
             line = input.readLine();
             sb.append(line.trim());
             FileWriter fileWriter = new FileWriter(path,true);
             fileWriter.append((credentials.size()>0?"\n":"")+sb.toString());
             fileWriter.close();
-            System.out.println("User created successfully");
+            Utils.createUserDirectory(Utils.std_path,user);
+            System.out.println("User "+user+" created successfully");
         } catch (Exception e) {
             System.out.println(e.getLocalizedMessage());
         }
@@ -111,11 +116,13 @@ public class LoginPage {
     private void authenticateUser(Map<String, UserCredentials> credentials, BufferedReader input) {
         String username = null;
         String password = null;
+        String user = null;
         boolean isUserValidated = false;
         try {
             do {
                 System.out.print("Kindly enter username : ");
-                username = Utils.hashWithMD5(input.readLine());
+                user = input.readLine();
+                username = Utils.hashWithMD5(user);
                 System.out.print("Kindly enter password : ");
                 password = Utils.hashWithMD5(input.readLine());
                 if (credentials.containsKey(username)) {
@@ -132,8 +139,8 @@ public class LoginPage {
         } catch (IOException e) {
             System.out.println(e.getLocalizedMessage());
         }
-        Menu menu = new Menu();
-        menu.displayMenu(input);
+        Menu menu = new Menu(input, currentUser, Utils.std_path+"/"+user);
+        menu.displayMenu();
 
     }
 

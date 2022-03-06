@@ -1,3 +1,5 @@
+package UIAndSecurity;
+
 public class UserCredentials {
     private String username = null;
     private String password = null;
