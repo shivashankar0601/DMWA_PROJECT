@@ -92,7 +92,10 @@ public class DatabaseProcessor {
             while ((line = br.readLine()) != null && line.length() > 0) {
                 String[] splits = line.split(Utils.delimiter);
                 if (splits[0].equalsIgnoreCase(dbName))
-                    res.concat(splits[1]);
+                    if(res.length()==0)
+                        res = splits[1];
+                    else
+                        res = res + Utils.delimiter +splits[1] ;
             }
             if(res.length()>0)
                 return res;

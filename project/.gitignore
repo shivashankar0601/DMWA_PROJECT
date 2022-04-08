@@ -19,6 +19,7 @@ target/
 *.iml
 *.ipr
 ./resources/*
+./resources/gdd.tsv
 
 ### NetBeans ###
 /nbproject/private/

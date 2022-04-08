@@ -7,6 +7,11 @@ import static org.junit.jupiter.api.Assertions.*;
 class DatabaseProcessorTest {
 
     DatabaseProcessor dp = new DatabaseProcessor();
+
+    @Test
+    void checkDBFromGDD() {
+        assertEquals("vm1~vm2",DatabaseProcessor.checkDBFromGDD("shiva"));
+    }
 //
 //    @Test
 //    void createDatabaseWithSemicolon() {
