@@ -12,33 +12,33 @@ public class Requester {
 
     private static Requester requester = null;
 
-    public Requester(){  }
+    public Requester() {
+    }
 
-    public static Requester getInstance(){
-        if(requester==null)
+    public static Requester getInstance() {
+        if (requester == null)
             requester = new Requester();
         return requester;
     }
 
     // this method will request for dbcheck, if db exists in GDD it will return the VM name or ip for now
     //http://localhost:8080/gdd?checkDB=test
-    public String requestVMDBCheck(String dbName){
-        return requestVM("gdd?checkDB="+dbName);
+    public String requestVMDBCheck(String dbName) {
+        return requestVM("gdd?checkDB=" + dbName);
     }
 
     //http://localhost:8080/gdd?addDB=test&vm=vm1
-    public boolean requestVMAddDB(String dbName, String vmName){
-        return Boolean.parseBoolean(requestVM("gdd?addDB="+dbName+"&vm="+vmName));
+    public boolean requestVMAddDB(String dbName, String vmName) {
+        return Boolean.parseBoolean(requestVM("gdd?addDB=" + dbName + "&vm=" + vmName));
     }
 
-    /*public String requestVMInsertIntoQuery (String query, String flag) {
-    //String response =  insertIntoQuery(query,flag);
-    }*/
+    public String requestVMInsertIntoQuery(String query, String flag) {
+        return requestVM("query?insert=" + query + "&flag=" + flag);
+    }
 
-    /*public void  requestVMSetCurrentDbName(String currentDbName) {
-    //call setCurrentDbName(Utils.currentDbName);
-    }*/
-
+    public String requestVMSetCurrentDbName(String currentDbName) {
+        return requestVM("utils?setCDBN="+Utils.currentDbName);
+    }
 
 
     // parameter is a method name with all the parameters

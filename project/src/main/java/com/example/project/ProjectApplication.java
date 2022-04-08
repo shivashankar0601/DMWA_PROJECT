@@ -9,12 +9,12 @@ import java.util.Properties;
 public class ProjectApplication {
 
 	public static void main(String[] args) {
-//		SpringApplication myApplication = new SpringApplication(ProjectApplication.class);
-//		Properties prop = new Properties();
-//		prop.setProperty("spring.main.banner-mode","off");
-//		prop.setProperty("logging.pattern.console","");
-//		myApplication.setDefaultProperties(prop);
-//		myApplication.run(args);
+		SpringApplication myApplication = new SpringApplication(ProjectApplication.class);
+		Properties prop = new Properties();
+		prop.setProperty("spring.main.banner-mode","off");
+		prop.setProperty("logging.pattern.console","");
+		myApplication.setDefaultProperties(prop);
+		myApplication.run(args);
 
 
 //		SpringApplication.run(ProjectApplication.class, args); // by default we will get all the logs from the spring boot, so i am disabling them

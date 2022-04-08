@@ -88,18 +88,21 @@ public class DatabaseProcessor {
         try {
             BufferedReader br = new BufferedReader(new FileReader(Utils.resourcePath + "gdd.tsv"));
             String line;
+            String res = "";
             while ((line = br.readLine()) != null && line.length() > 0) {
                 String[] splits = line.split(Utils.delimiter);
                 if (splits[0].equalsIgnoreCase(dbName))
-                    return splits[1];
+                    res.concat(splits[1]);
             }
+            if(res.length()>0)
+                return res;
         } catch (FileNotFoundException e) {
             System.err.println(Utils.gddNotFound);
             // at least an empty gdd should be made available by the time application is created
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return null;
+        return "";
     }
 
     public static boolean addDBToGDD(String dbName, String vm) {
