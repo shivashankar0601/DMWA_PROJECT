@@ -7,6 +7,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 
 public class Requester {
 
@@ -32,7 +33,7 @@ public class Requester {
         return Boolean.parseBoolean(requestVM("gdd?addDB=" + dbName + "&vm=" + vmName));
     }
 
-    public String requestVMInsertIntoQuery(String query, String flag) {
+    public String requestVMInsertQuery(String query, String flag) {
         return requestVM("query?insert=" + query + "&flag=" + flag);
     }
 
@@ -44,9 +45,22 @@ public class Requester {
         return requestVM("query?delete=" + query + "&flag=" + flag);
     }
 
-    public String requestVMSetCurrentDbName(String currentDbName) {
-        return requestVM("utils?setCDBN="+Utils.currentDbName);
+    public String requestVMSelectQuery(String query, String flag) {
+        return requestVM("query?select=" + query + "&flag=" + flag);
     }
+
+    public String requestVMSetCurrentDbName(String currentDbName) {
+        return requestVM("utils?setCDBN=" + Utils.currentDbName);
+    }
+
+    public String requestVMForDBs() {
+        return requestVM("gdd?list=all");
+    }
+
+    public String requestVMAllTables(String dbName, boolean isVmRequest) {
+        return requestVM("tables?db="+dbName+"&vm="+isVmRequest);
+    }
+
 
 
     // parameter is a method name with all the parameters
@@ -74,6 +88,4 @@ public class Requester {
         // if an error occurred, then we will return null instead of the response object
         return null;
     }
-
-
 }

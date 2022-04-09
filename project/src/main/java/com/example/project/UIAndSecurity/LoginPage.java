@@ -140,6 +140,8 @@ public class LoginPage {
             do {
                 System.out.print("Kindly enter username : ");
                 user = input.readLine();
+                if(user.equalsIgnoreCase("0"))
+                    break;
                 username = Utils.hashWithMD5(user);
                 System.out.print("Kindly enter password : ");
                 password = Utils.hashWithMD5(input.readLine());
@@ -163,25 +165,42 @@ public class LoginPage {
                                 }
                                 continue;
                             }
-                            else
+                            else {
+                                isUserValidated = true;
+                                this.currentUser = credentials.get(username);
+                                System.out.println("user validated successfully");
+                                navigateToMenu(input, currentUser, username);
                                 break;
+                            }
                         }
-                        isUserValidated = true;
-                        this.currentUser = credentials.get(username);
-                        System.out.println("user validated successfully");
+
                     } else
                         System.out.println("Invalid password, Try again");
-                } else
+                }
+                else {
                     System.out.println("Invalid credentials, Try again");
+                    System.err.println("enter 0 as username to exit:");
+                    try {
+                        TimeUnit.SECONDS.sleep(1);
+                    } catch (InterruptedException e) {
+                        //e.printStackTrace();
+                    }
+                }
 
             } while (!isUserValidated);
         } catch (IOException e) {
             System.out.println(e.getLocalizedMessage());
         }
-        Menu menu = new Menu(input, currentUser, Utils.resourcePath +user+"/");
-        menu.displayMenu();
 
     }
+
+    private void navigateToMenu(BufferedReader input, UserCredentials currentUser, String user){
+        if(currentUser!=null) {
+            Menu menu = new Menu(input, currentUser, Utils.resourcePath + user + "/");
+            menu.displayMenu();
+        }
+    }
+
 
 
 }
