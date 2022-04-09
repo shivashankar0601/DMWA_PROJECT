@@ -33,6 +33,7 @@ public class TableProcessor {
 
     private static String deleteQuery(String query, String flag) {
         try {
+            query = query.replaceAll("%20", " ");
             String[] deleteQueryArray = query.split(" ");
             String queryTableName = deleteQueryArray[2];
 
@@ -161,16 +162,28 @@ public class TableProcessor {
                     return "Table '" + queryTableName + "' does not exist in " + Utils.currentDbName;
                 } else {
                     // Call Another VM
+                    Requester requester = Requester.getInstance();
+                    String vmList = requester.requestVMDBCheck(Utils.currentDbName);
+                    if (vmList.split("~").length > 1) {
+                        requester.requestVMSetCurrentDbName(Utils.currentDbName);
+                        String response = requester.requestVMDeleteQuery(query.replaceAll(" ", "%20"), "remote");
+                        System.out.println(response);
+                        return response;
+                    } else {
+                        System.out.println("Table does not exist");
+                    }
                 }
             }
         } catch(Exception e){
             System.out.println("Exception: "+e);
+            return "Exception: "+e;
         }
         return "";
     }
 
     private static String updateQuery(String query, String flag) {
         try {
+            query = query.replaceAll("%20", " ");
             String[] updateQueryArray = query.split(" ");
             String queryTableName = updateQueryArray[1];
 
@@ -311,10 +324,21 @@ public class TableProcessor {
                     return "Table '" + queryTableName + "' does not exist in " + Utils.currentDbName;
                 } else {
                     // Call Another VM
+                    Requester requester = Requester.getInstance();
+                    String vmList = requester.requestVMDBCheck(Utils.currentDbName);
+                    if (vmList.split("~").length > 1) {
+                        requester.requestVMSetCurrentDbName(Utils.currentDbName);
+                        String response = requester.requestVMUpdateQuery(query.replaceAll(" ", "%20"), "remote");
+                        System.out.println(response);
+                        return response;
+                    } else {
+                        System.out.println("Table does not exist");
+                    }
                 }
             }
         } catch(Exception e){
             System.out.println("Exception: "+e);
+            return "Exception: "+e;
         }
         return "";
     }

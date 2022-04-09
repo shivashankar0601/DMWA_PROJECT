@@ -36,6 +36,14 @@ public class Requester {
         return requestVM("query?insert=" + query + "&flag=" + flag);
     }
 
+    public String requestVMUpdateQuery(String query, String flag) {
+        return requestVM("query?update=" + query + "&flag=" + flag);
+    }
+
+    public String requestVMDeleteQuery(String query, String flag) {
+        return requestVM("query?delete=" + query + "&flag=" + flag);
+    }
+
     public String requestVMSetCurrentDbName(String currentDbName) {
         return requestVM("utils?setCDBN="+Utils.currentDbName);
     }
