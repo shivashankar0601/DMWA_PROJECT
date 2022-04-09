@@ -50,7 +50,7 @@ public class QueryProcessor {
     }
 
     public int queryParser(String query) {
-        if (query.contains("table") || query.contains("insert") || query.contains("update") || query.contains("delete") || query.contains("select"))
+        if (query.toLowerCase().contains("table") || query.toLowerCase().contains("insert") || query.toLowerCase().contains("update") || query.toLowerCase().contains("delete") || query.toLowerCase().contains("select"))
             return 1;
         else
             return 0;
