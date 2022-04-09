@@ -32,7 +32,7 @@ public class Requester {
         return Boolean.parseBoolean(requestVM("gdd?addDB=" + dbName + "&vm=" + vmName));
     }
 
-    public String requestVMInsertIntoQuery(String query, String flag) {
+    public String requestVMInsertQuery(String query, String flag) {
         return requestVM("query?insert=" + query + "&flag=" + flag);
     }
 
@@ -45,7 +45,11 @@ public class Requester {
     }
 
     public String requestVMSetCurrentDbName(String currentDbName) {
-        return requestVM("utils?setCDBN="+Utils.currentDbName);
+        return requestVM("utils?setCDBN=" + Utils.currentDbName);
+    }
+
+    public String requestVMForDBs() {
+        return requestVM("gdd?list=all");
     }
 
 
@@ -74,6 +78,5 @@ public class Requester {
         // if an error occurred, then we will return null instead of the response object
         return null;
     }
-
 
 }

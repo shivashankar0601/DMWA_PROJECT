@@ -78,7 +78,7 @@ public class TableProcessor {
                     String vmList = requester.requestVMDBCheck(Utils.currentDbName);
                     if (vmList.split("~").length > 1 || !vmList.equals(Utils.currentDevice)) {
                         requester.requestVMSetCurrentDbName(Utils.currentDbName);
-                        String response = requester.requestVMInsertIntoQuery(query.replaceAll(" ", "%20"), "remote");
+                        String response = requester.requestVMInsertQuery(query.replaceAll(" ", "%20"), "remote");
                         System.out.println(response);
                     } else {
                         System.out.println("table does not exist");
