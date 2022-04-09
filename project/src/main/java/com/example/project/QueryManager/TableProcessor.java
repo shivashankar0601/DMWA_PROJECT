@@ -40,7 +40,7 @@ public class TableProcessor {
         }
     }
 
-    private static String insertIntoQuery(String query, String flag) {
+    public static String insertIntoQuery(String query, String flag) {
         String tableName;
         List < String > insertValues = new ArrayList < > ();
         query = query.replaceAll("%20", " ");
@@ -68,7 +68,7 @@ public class TableProcessor {
                 } else {
                     Requester requester = Requester.getInstance();
                     String vmList = requester.requestVMDBCheck(Utils.currentDbName);
-                    if (vmList.split("~").length > 1) {
+                    if (vmList.split("~").length > 1 || !vmList.equals(Utils.currentDevice)) {
                         requester.requestVMSetCurrentDbName(Utils.currentDbName);
                         String response = requester.requestVMInsertIntoQuery(query.replaceAll(" ", "%20"), "remote");
                         System.out.println(response);
@@ -83,11 +83,11 @@ public class TableProcessor {
         return "";
     }
 
-    private static void setCurrentDbName(String currentDbName) {
+    public static void setCurrentDbName(String currentDbName) {
         Utils.currentDbName = currentDbName;
     }
 
-    private static Boolean validateAndInsert(String tableName, int columnCount, List < String > arr) {
+    public static Boolean validateAndInsert(String tableName, int columnCount, List < String > arr) {
         try {
             BufferedReader br = new BufferedReader(new FileReader(Utils.resourcePath + Utils.currentDbName + "/" + tableName + ".tsv"));
             String firstLine = br.readLine();
@@ -111,7 +111,7 @@ public class TableProcessor {
         return false;
     }
 
-    private static Boolean checkIfTableExists(String tableName) {
+    public static Boolean checkIfTableExists(String tableName) {
         try {
             BufferedReader br = new BufferedReader(new FileReader(Utils.resourcePath + Utils.currentDbName + "/" + "metadata.tsv"));
             String line;
@@ -131,7 +131,7 @@ public class TableProcessor {
         return false;
     }
 
-    private static void createTableQuery(String query){
+    public static void createTableQuery(String query){
         String tablePath;
         String tableName;
         String output = "";
@@ -196,7 +196,7 @@ public class TableProcessor {
         }
     }
 
-    private static String deleteQuery(String query, String flag) {
+    public static String deleteQuery(String query, String flag) {
         try {
             query = query.replaceAll("%20", " ");
             String[] deleteQueryArray = query.split(" ");
@@ -329,7 +329,7 @@ public class TableProcessor {
                     // Call Another VM
                     Requester requester = Requester.getInstance();
                     String vmList = requester.requestVMDBCheck(Utils.currentDbName);
-                    if (vmList.split("~").length > 1) {
+                    if (vmList.split("~").length > 1 || !vmList.equals(Utils.currentDevice)) {
                         requester.requestVMSetCurrentDbName(Utils.currentDbName);
                         String response = requester.requestVMDeleteQuery(query.replaceAll(" ", "%20"), "remote");
                         System.out.println(response);
@@ -346,7 +346,7 @@ public class TableProcessor {
         return "";
     }
 
-    private static String updateQuery(String query, String flag) {
+    public static String updateQuery(String query, String flag) {
         try {
             query = query.replaceAll("%20", " ");
             String[] updateQueryArray = query.split(" ");
@@ -491,7 +491,7 @@ public class TableProcessor {
                     // Call Another VM
                     Requester requester = Requester.getInstance();
                     String vmList = requester.requestVMDBCheck(Utils.currentDbName);
-                    if (vmList.split("~").length > 1) {
+                    if (vmList.split("~").length > 1 || !vmList.equals(Utils.currentDevice)) {
                         requester.requestVMSetCurrentDbName(Utils.currentDbName);
                         String response = requester.requestVMUpdateQuery(query.replaceAll(" ", "%20"), "remote");
                         System.out.println(response);
