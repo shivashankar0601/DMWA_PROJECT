@@ -23,17 +23,25 @@ public class TableProcessor {
         query = query.toLowerCase();
         String insertIntoRegx = "(insert\\sinto\\s[)(0-9a-zA-Z_\\s,'\"]+)[;]?"; //check if the insert query is in correct format
         String createTableRegx = "^(create\\stable\\s[)(0-9a-zA-Z_\\s,]+)[;]?$";
+
+        String flag = "";
+        if (Utils.isVMRequest) {
+            flag = "remote";
+        } else {
+            flag = "local";
+        }
+
         if (query.matches(insertIntoRegx)) {
-            insertIntoQuery(query,"local");
+            insertIntoQuery(query,flag);
         }
         else if (query.matches(createTableRegx)) {
             createTableQuery(query);
         } 
         else if(query.contains("update")){
-            updateQuery(query,"local");
+            updateQuery(query,flag);
         } 
         else if(query.contains("delete")){
-            deleteQuery(query,"local");
+            deleteQuery(query,flag);
         }
         else {
             System.out.println("Query is not correct");

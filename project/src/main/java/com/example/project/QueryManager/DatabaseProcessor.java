@@ -55,7 +55,7 @@ public class DatabaseProcessor {
     public boolean dbExists(String dbName) {
         if (Utils.gddExists) {
             String res = checkDBFromGDD(dbName);
-            if (res != null && !res.equalsIgnoreCase(Utils.currentDevice)) {
+            if (res != null && !res.contains(Utils.currentDevice)) {
                 Utils.isVMRequest = true;
             } else if (res != null) {
                 Utils.isVMRequest = false;
