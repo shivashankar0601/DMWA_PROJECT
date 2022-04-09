@@ -23,6 +23,7 @@ public class TableProcessor {
         query = query.toLowerCase();
         String insertIntoRegx = "(insert\\sinto\\s[)(0-9a-zA-Z_\\s,'\"]+)[;]?"; //check if the insert query is in correct format
         String createTableRegx = "^(create\\stable\\s[)(0-9a-zA-Z_\\s,]+)[;]?$";
+        String selectTableReg = "^((select)\\s([*]?|[0-9a-zA-Z_ ,]+)\\s(from)\\s([0-9a-zA-Z _'=]+)(\\s(where)\\s([0-9a-zA-Z _'\\\\\"=]+))?)[;]?$";
 
         String flag = "";
         if (Utils.isVMRequest) {
@@ -36,12 +37,15 @@ public class TableProcessor {
         }
         else if (query.matches(createTableRegx)) {
             createTableQuery(query);
-        } 
+        }
         else if(query.contains("update")){
             updateQuery(query,flag);
-        } 
+        }
         else if(query.contains("delete")){
             deleteQuery(query,flag);
+        }
+        else if (query.matches(selectTableReg)) {
+            selectQuery(query,flag);
         }
         else {
             System.out.println("Query is not correct");
@@ -518,6 +522,152 @@ public class TableProcessor {
 
     public static String selectQuery(String query, String flag) {
         // defining empty method to build the project before pushing, you can replace the body with your functionality hardee
+        String processedQuery = "";
+        String tableName = "";
+        String columnNameToCheckWhereCondition = "";
+        String columnValueToCheckWhereCondition = "";
+        String[] columnDetails = new String[2];
+        String output = "";
+        ArrayList<String> columnNameList = new ArrayList<String>();
+        try {
+            if (query.contains(";")) {
+                processedQuery = query.substring(1, query.indexOf(';') - 1);
+            } else {
+                processedQuery = query.substring(7, query.length());
+            }
+            if (processedQuery.startsWith("*")) {
+                columnNameList = null;
+                processedQuery = processedQuery.substring(7, processedQuery.length());
+                if (processedQuery.contains("where")) {
+                    //select * from persons where lastname = lastname1
+                    String[] tableDetails = processedQuery.split("where");
+                    tableName = tableDetails[0].trim();
+                    columnDetails = tableDetails[1].split("=");
+//               columnNameToCheckWhereCondition = columnDetails[0].trim();
+//               columnValueToCheckWhereCondition = columnDetails[1].trim();
+                } else {
+                    //select * from persons ------done
+                    tableName = processedQuery.trim();
+                    columnDetails = null;
+                }
+                //output = selectReadTable(tableName,columnNameList,columnDetails);
+            } else {
+
+                if (processedQuery.contains("where")) {
+                    //select names, age from testtable where name = hardee
+                    String[] tableDetails = processedQuery.split("where");
+                    String[] colDetail = tableDetails[0].split("from");
+                    columnDetails = tableDetails[1].replaceAll("\"", " ").split("=");
+                    String[] columnList = colDetail[0].split(",");
+                    tableName = colDetail[1].trim();
+                    for (String colName : columnList) {
+                        columnNameList.add(colName.trim());
+                    }
+                    // output = selectReadTable(tableName,columnNameList,columnDetails);
+                } else {
+                    //select name, age from testtable
+                    String[] tableDetails = processedQuery.split("from");
+                    tableName = tableDetails[1].trim();
+                    String[] columnList = tableDetails[0].split(",");
+                    for (String colName : columnList) {
+                        columnNameList.add(colName.trim());
+                    }
+                    columnDetails = null;
+                    // output = selectReadTable(tableName,columnNameList,columnDetails);
+                }
+
+            }
+            if (tableName != null) {
+                if (checkIfTableExists(tableName)) {
+                    output = selectReadTable(tableName, columnNameList, columnDetails);
+                    if (flag.equals("local")) {
+                        System.out.println(output);
+                        return "";
+                    } else {
+                        return output;
+                    }
+                } else {
+                    if (flag.equals("remote")) {
+                        return "table does not exist";
+                    } else {
+                        Requester requester = Requester.getInstance();
+                        String vmList = requester.requestVMDBCheck(Utils.currentDbName);
+                        if (vmList.split("~").length > 1 || !vmList.equals(Utils.currentDevice)) {
+                            requester.requestVMSetCurrentDbName(Utils.currentDbName);
+                            String response = requester.requestVMSelectQuery(query.replaceAll(" ", "%20"), "remote");
+                            System.out.println(response);
+
+                        } else {
+                            System.out.println("table does not exist");
+
+                        }
+                    }
+                }
+            } else {
+                System.err.println("query is incorrect");
+            }
+
+            output = selectReadTable(tableName, columnNameList, columnDetails);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println("output: \n" + output);
         return "";
     }
+    public static String selectReadTable(String tableName, ArrayList<String> columnList, String[] keyValuePair) throws IOException {
+        BufferedReader br = new BufferedReader(new FileReader(Utils.resourcePath+Utils.currentDbName+"/"+tableName+".tsv"));
+        String line;
+        String str = "";
+        br.readLine();
+        ArrayList<Integer> index = new ArrayList<>();
+        String[] columnNames = br.readLine().split("~");
+        int whereIndex = -1;
+        for(int j =0;j<columnNames.length;j++) {
+            if(columnList!=null) {
+                for (int i = 0; i < columnList.size(); i++) {
+                    if (columnList.get(i).equals(columnNames[j].split(" ")[0])) {
+                        index.add(j);
+                    }
+                }
+            }
+            if(keyValuePair!=null && columnNames[j].split(" ")[0].equals(keyValuePair[0].trim())) {
+                whereIndex = j;
+            }
+        }
+        if(columnList==null) {
+            while ((line = br.readLine()) != null && line.length() > 0) {
+                String [] lineSplits = line.split("~");
+                if(whereIndex>-1) {
+                    if(lineSplits[whereIndex].equals(keyValuePair[1].trim())) {
+                        str += line + "\n";
+                    }
+                } else {
+                    str += line + "\n";
+                }
+            }
+            return str;
+        } else {
+            while ((line = br.readLine()) != null && line.length() > 0) {
+                String [] lineSplits = line.split("~");
+                for(int i =0;i<index.size();i++) {
+                    if(whereIndex>-1) {
+                        if(lineSplits[whereIndex].equals(keyValuePair[1].trim())) {
+                            str += lineSplits[index.get(i)] + "~";
+                        }
+                    } else {
+                        str += lineSplits[index.get(i)] + "~";
+                    }
+                }
+                if(str!=""){
+                    str = str.substring(0,str.length()-1);
+                    str+="\n";
+                }
+
+            }
+            br.close();
+            return str;
+        }
+
+    }
+
 }
