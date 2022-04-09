@@ -1,8 +1,11 @@
 package com.example.project.Utilities;
 
+import com.example.project.QueryManager.TransactionResults;
+
 import java.io.*;
 import java.math.BigInteger;
 import java.security.MessageDigest;
+import java.util.List;
 
 public class Utils {
 
@@ -21,6 +24,7 @@ public class Utils {
     // Error messages which are commonly used
     public static String gddNotFound = "Global Data Dictionary is not found";
     public static String dbMetadataNotFound = "Metadata file not found";
+    public static List<TransactionResults> transactionResults;
 
     public static String hashWithMD5(String user_name) {
         try {
