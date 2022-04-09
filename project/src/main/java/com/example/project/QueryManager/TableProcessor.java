@@ -31,6 +31,7 @@ public class TableProcessor {
     private static String insertIntoQuery(String query, String flag) {
         String tableName;
         List < String > insertValues = new ArrayList < > ();
+        query = query.replaceAll("%20", " ");
         String insertIntoPattern = "((?<=(insert\\sinto\\s))[\\w\\d_]+(?=\\s+))|((?<=\\()([\\w\\d_,'\\w'\"\\w\"]+)+(?=\\)))"; //pattern to fetch table name and values to insert
         Pattern re = Pattern.compile(insertIntoPattern, Pattern.CASE_INSENSITIVE);
         Matcher m = re.matcher(query);
@@ -43,25 +44,25 @@ public class TableProcessor {
         if (tableName != null) {
             if (checkIfTableExists(tableName)) {
                 if (validateAndInsert(tableName, columnCount, insertValues)) {
-                    if(flag.equals("local")) {
+                    if (flag.equals("local")) {
                         System.out.println("inserted successfully");
                     } else {
                         return "inserted successfully";
                     }
                 }
             } else {
-                if(flag.equals("remote")) {
+                if (flag.equals("remote")) {
                     return "table does not exist";
-                }
-                else {
-                    System.out.println("call vm2");
-                    //check GDD
-                    //if present:
-                        //requestVMSetCurrentDbName(Utils.currentDbName)
-                        //String response = requestVMInsertIntoQuery(query, "remote");
-                        //System.out.println(response);
-                    //else:
-                        //System.out.println("table does not exist");
+                } else {
+                    Requester requester = Requester.getInstance();
+                    String vmList = requester.requestVMDBCheck(Utils.currentDbName);
+                    if (vmList.split("~").length > 1) {
+                        requester.requestVMSetCurrentDbName(Utils.currentDbName);
+                        String response = requester.requestVMInsertIntoQuery(query.replaceAll(" ", "%20"), "remote");
+                        System.out.println(response);
+                    } else {
+                        System.out.println("table does not exist");
+                    }
                 }
             }
         } else {
