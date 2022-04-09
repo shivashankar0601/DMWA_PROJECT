@@ -516,4 +516,8 @@ public class TableProcessor {
         return "";
     }
 
+    public static String selectQuery(String query, String flag) {
+        // defining empty method to build the project before pushing, you can replace the body with your functionality hardee
+        return "";
+    }
 }

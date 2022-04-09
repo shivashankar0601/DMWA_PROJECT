@@ -1,13 +1,12 @@
 package com.example.project.DataExport;
 
 import com.example.project.DistributedDatabaseLayer.Requester;
+import com.example.project.QueryManager.DatabaseProcessor;
 import com.example.project.UIAndSecurity.UserCredentials;
 import com.example.project.Utilities.Utils;
+import org.apache.tomcat.util.buf.StringUtils;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -31,37 +30,50 @@ public class ExportEngine {
         String ipt = null;
         try {
             dbs = getAllAvailableDBs();
-            System.out.println("Available databases for data export :");
 
             if (dbs.size() == 0) {
                 System.err.println("no databases available to export");
                 return;
             }
 
-            for (String s : dbs) {
-                System.out.println(s);
-            }
-
             do {
+                System.out.println("\nAvailable databases for data export :");
+
+                for (String s : dbs) {
+                    System.out.println(s);
+                }
 
                 System.out.print("Enter the name of the database to be exported (press 0 to exit):");
 
                 ipt = input.readLine();
 
-                if(ipt.equalsIgnoreCase("0"))
+                if (ipt.equalsIgnoreCase("0"))
                     break;
 
-                if(dbs.contains(ipt.trim())){
-                    // perform the data export operation
-                    System.out.println(ipt.trim()+" Database exported successfully to {some path}");
-                }
-                else{
+                if (dbs.contains(ipt.trim())) {
 
+                    String tables = getAllAvailableTables(ipt, true);
+                    if(tables==null || tables.length()==0){
+                        // which means no tables in the db, what should i do
+                        System.err.println("no tables in the database to export");
+                        try {
+                            TimeUnit.SECONDS.sleep(1);
+                            break;
+                        } catch (InterruptedException e) {
+                            //e.printStackTrace();
+                        }
+                    }
+                    else{
+                        // perform the data export operation
+                        System.out.println(ipt.trim() + " Database exported successfully to {some path}");
+                    }
+
+                } else {
                     System.err.println("invalid option, try again ! ");
                     TimeUnit.SECONDS.sleep(1);
                 }
 
-            }while(true);
+            } while (true);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
@@ -69,6 +81,47 @@ public class ExportEngine {
         }
 
 
+    }
+
+    private boolean createExportFile(List<String> tables) {
+        boolean status = false;
+        //FileWriter export = new FileWriter(dbName + "_exported_data.sql");
+
+        return status;
+    }
+
+    public static String getAllAvailableTables(String dbName, boolean shouldRequestVM) {
+        ArrayList<String> tables = new ArrayList<String>();
+
+        // check if the db exists locally as we are not storing the information from previous requests
+        String path = Utils.resourcePath + dbName;
+        File f = new File(path);
+        if (f.exists()) { // db exists locally
+            path = path + "/";
+            File tbls[] = f.listFiles();
+            for (File table : tbls) {
+                String tname = table.getName();
+                tname = tname.substring(0,tname.indexOf(".tsv"));
+                if(tname.equalsIgnoreCase("metadata"))
+                    continue;
+                tables.add(tname);
+                //System.out.println(tname);
+            }
+        }
+
+        String response = StringUtils.join(tables,Utils.delimiter.charAt(0));
+
+        if(shouldRequestVM){
+            // ask vm to give the tables available over there
+            String res = Requester.getInstance().requestVMAllTables(dbName,!shouldRequestVM);
+            // returning empty string from server is causing null pointer exception in html response so returning none
+            if(res!=null && res.length()>0) {
+                response = response.length()>0? response.concat(Utils.delimiter+res):res;
+                return response;
+            }
+        }
+        // if it is a request from other vm, we will just send them the local information
+        return response;
     }
 
     public static List<String> getAllAvailableDBs() {

@@ -63,4 +63,19 @@ public class Responder {
         return TableProcessor.deleteQuery(query, flag);
     }
 
+    @RequestMapping(value = "/query", params = "select", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public String performSelectQuery(@RequestParam(value = "select", defaultValue = "") String query, @RequestParam(value = "flag", defaultValue = "") String flag) {
+        return TableProcessor.selectQuery(query, flag);
+    }
+
+
+
+    @RequestMapping(value = "/tables", params = "db", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public String getAllTablesFromDB(@RequestParam(value = "db", defaultValue = "") String dbName, @RequestParam(value = "vm", defaultValue = "") boolean shouldRequestVM) {
+        return ExportEngine.getAllAvailableTables(dbName, shouldRequestVM);
+    }
+
+
+
+
 }

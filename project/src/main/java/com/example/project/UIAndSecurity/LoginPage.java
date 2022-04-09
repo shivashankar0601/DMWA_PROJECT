@@ -165,12 +165,15 @@ public class LoginPage {
                                 }
                                 continue;
                             }
-                            else
+                            else {
+                                isUserValidated = true;
+                                this.currentUser = credentials.get(username);
+                                System.out.println("user validated successfully");
+                                navigateToMenu(input, currentUser, username);
                                 break;
+                            }
                         }
-                        isUserValidated = true;
-                        this.currentUser = credentials.get(username);
-                        System.out.println("user validated successfully");
+
                     } else
                         System.out.println("Invalid password, Try again");
                 }
@@ -188,10 +191,16 @@ public class LoginPage {
         } catch (IOException e) {
             System.out.println(e.getLocalizedMessage());
         }
-        Menu menu = new Menu(input, currentUser, Utils.resourcePath +user+"/");
-        menu.displayMenu();
 
     }
+
+    private void navigateToMenu(BufferedReader input, UserCredentials currentUser, String user){
+        if(currentUser!=null) {
+            Menu menu = new Menu(input, currentUser, Utils.resourcePath + user + "/");
+            menu.displayMenu();
+        }
+    }
+
 
 
 }
