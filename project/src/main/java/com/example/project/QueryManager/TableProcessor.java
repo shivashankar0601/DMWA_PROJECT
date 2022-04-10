@@ -87,6 +87,7 @@ public class TableProcessor {
 
         if (tableName != null) {
             if (checkIfTableExists(tableName)) {
+
                 while(Utils.tableLocked.contains(tableName)) {
                     try {
                         System.out.println("Waiting for the lock to get released...");
@@ -96,16 +97,17 @@ public class TableProcessor {
                     }
                 }
                 Utils.tableLocked.add(tableName);
+
                 if (validateValues(tableName, columnCount, insertValues, isTransaction)) {
                     if (flag.equals("local") && !isTransaction) {
                         System.out.println("inserted successfully");
+                        if(Utils.tableLocked.contains(tableName))
+                            Utils.tableLocked.remove(tableName);
                     } else if(flag.equals("remote") && !isTransaction){
                         if(Utils.tableLocked.contains(tableName))
                             Utils.tableLocked.remove(tableName);
                         return "success";
                     } else {
-                        if(Utils.tableLocked.contains(tableName))
-                            Utils.tableLocked.remove(tableName);
                         return "inserted successfully";
                     }
                 }  else {
@@ -116,8 +118,6 @@ public class TableProcessor {
                 }
             } else {
                 if (flag.equals("remote")) {
-                    if(Utils.tableLocked.contains(tableName))
-                        Utils.tableLocked.remove(tableName);
                     return "table does not exist";
                 } else {
                     Requester requester = Requester.getInstance();
@@ -126,8 +126,6 @@ public class TableProcessor {
                         requester.requestVMSetCurrentDbName(Utils.currentDbName);
                         String response = requester.requestVMInsertQuery(query.replaceAll(" ", "%20"), "remote", isTransaction);
                         if(response.equals("invalid")) {
-                            if(Utils.tableLocked.contains(tableName))
-                                Utils.tableLocked.remove(tableName);
                             return "invalid";
                         } else if(!response.equals("invalid") && response.equals("inserted successfully")){
                             Utils.transQueryList.add(query);
@@ -136,20 +134,14 @@ public class TableProcessor {
                         }
                     } else {
                         System.out.println("table does not exist");
-                        if(Utils.tableLocked.contains(tableName))
-                            Utils.tableLocked.remove(tableName);
                         return "invalid";
                     }
                 }
             }
         } else {
             System.err.println("query is incorrect");
-            if(Utils.tableLocked.contains(tableName))
-                Utils.tableLocked.remove(tableName);
             return "invalid";
         }
-        if(Utils.tableLocked.contains(tableName))
-            Utils.tableLocked.remove(tableName);
         return "";
     }
 
