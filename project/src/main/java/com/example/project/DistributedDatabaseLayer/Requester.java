@@ -7,7 +7,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.List;
 
 public class Requester {
 
@@ -34,15 +33,15 @@ public class Requester {
     }
 
     public String requestVMInsertQuery(String query, String flag, Boolean isTransaction) {
-        return requestVM("query?insert=" + query + "&flag=" + flag+ "&isTransaction=" + isTransaction);
+        return requestVM("query?insert=" + query + "&flag=" + flag + "&isTransaction=" + isTransaction);
     }
 
     public String requestVMUpdateQuery(String query, String flag, Boolean isTransaction) {
-        return requestVM("query?update=" + query + "&flag=" + flag+ "&isTransaction=" + isTransaction);
+        return requestVM("query?update=" + query + "&flag=" + flag + "&isTransaction=" + isTransaction);
     }
 
     public String requestVMDeleteQuery(String query, String flag, Boolean isTransaction) {
-        return requestVM("query?delete=" + query + "&flag=" + flag+ "&isTransaction=" + isTransaction);
+        return requestVM("query?delete=" + query + "&flag=" + flag + "&isTransaction=" + isTransaction);
     }
 
     public String requestVMSelectQuery(String query, String flag) {
@@ -58,14 +57,12 @@ public class Requester {
     }
 
     public String requestVMAllTables(String dbName, boolean isVmRequest) {
-        return requestVM("tables?db="+dbName+"&vm="+isVmRequest);
+        return requestVM("tables?db=" + dbName + "&vm=" + isVmRequest);
     }
 
-    public String[] requestVMWholeTable(String tableName, String dbName){
-        return  requestVM("readTable?table="+tableName+"&db="+dbName).split(Utils.delimiter);
+    public String[] requestVMWholeTable(String tableName, String dbName) {
+        return requestVM("readTable?table=" + tableName + "&db=" + dbName).split(Utils.delimiter);
     }
-
-
 
 
     // parameter is a method name with all the parameters
@@ -92,5 +89,9 @@ public class Requester {
         }
         // if an error occurred, then we will return null instead of the response object
         return null;
+    }
+
+    public String requestVMTableStructure(String dbName, String table) {
+        return requestVM("readStructure?table=" + table + "&db=" + dbName);
     }
 }
