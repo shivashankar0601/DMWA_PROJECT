@@ -1,5 +1,6 @@
 package com.example.project.QueryManager;
 
+import com.example.project.LogManager.LogManager;
 import com.example.project.Utilities.Utils;
 
 import java.io.*;
@@ -15,6 +16,8 @@ public class TableProcessor {
 
     private String path;
     private static String query;
+
+    private static LogManager logManager = new LogManager();
 
     public TableProcessor(String path) {
         this.path = path;
@@ -135,6 +138,7 @@ public class TableProcessor {
             if (columnCount == Integer.parseInt(firstLineSplit[1])) {
                 if (!isTransaction) {
                     insertValues(tableName, arr);
+                    logManager.writeEventLog("insert", tableName);
                 } else {
                     Utils.transQueryList.add(query);
                 }
@@ -232,7 +236,7 @@ public class TableProcessor {
                     bw.close();
                     fw.close();
                     System.out.println("Table created");
-
+                    logManager.writeEventLog("create table", tableName);
                 }
                 else{
                     System.out.println("Table already exists!");
@@ -355,6 +359,7 @@ public class TableProcessor {
                         writer.append(local_str);
                     }
                     writer.close();
+                    logManager.writeEventLog("delete", queryTableName);
                     if(flag.equals("local")){
                         System.out.println(affectedRows+" rows affected");
                     } else
@@ -532,6 +537,7 @@ public class TableProcessor {
                         writer.append(local_str);
                     }
                     writer.close();
+                    logManager.writeEventLog("update", queryTableName);
                     if(flag.equals("local")){
                         System.out.println(affectedRows+" rows affected");
                     } else

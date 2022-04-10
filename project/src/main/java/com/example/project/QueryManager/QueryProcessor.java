@@ -1,5 +1,6 @@
 package com.example.project.QueryManager;
 
+import com.example.project.LogManager.LogManager;
 import com.example.project.UIAndSecurity.UserCredentials;
 import com.example.project.Utilities.Utils;
 import java.io.BufferedReader;
@@ -9,6 +10,8 @@ public class QueryProcessor {
     private UserCredentials user;
     private BufferedReader input;
     private String path;
+
+    private LogManager logManager = new LogManager();
 
     public QueryProcessor(BufferedReader input, UserCredentials currentUser, String path) {
         this.user = currentUser;
@@ -23,6 +26,8 @@ public class QueryProcessor {
             do {
                 System.out.print("Query : ");
                 String query = input.readLine();
+                // log the query and current timestamp
+                logManager.writeQueryLog(query, this.user.getUsername());
                 switch (queryParser(query)) {
                     case 0: // for both create and use database queries, we should return zero from query processor
                         DatabaseProcessor dbp = new DatabaseProcessor();
