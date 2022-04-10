@@ -4,6 +4,7 @@ import com.example.project.LogManager.LogManager;
 import com.example.project.Utilities.Utils;
 
 import java.io.*;
+import java.lang.reflect.UndeclaredThrowableException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -161,6 +162,38 @@ public class TableProcessor {
             out.append(arr.get(i).replaceAll(",", "~").replaceAll("['\"]", ""));
         }
         out.close();
+        BufferedReader br3 = new BufferedReader(
+                new FileReader(Utils.resourcePath + "tableAnalysis.tsv"));
+        ArrayList<String> tableAnalysis = new ArrayList<String>();
+        String st3 = "";
+
+        // Adding data to arraylist line by line.
+        while ((st3 = br3.readLine()) != null) {
+            tableAnalysis.add(st3);
+        }
+        br3.close();
+
+        FileWriter fw1=new FileWriter(Utils.resourcePath+"tableAnalysis.tsv", false);
+        BufferedWriter bw1 = new BufferedWriter(fw1);
+        PrintWriter out1 = new PrintWriter(bw1);
+
+        String writeAnalysis="";
+        for(int i=0;i<tableAnalysis.size();i++){
+            writeAnalysis="";
+            String[] findAndUpdate=tableAnalysis.get(i).split(Utils.delimiter);
+            if(findAndUpdate[0].equals(Utils.currentDbName) && findAndUpdate[1].equals(tableName)){
+                Integer insertCount=Integer.parseInt(findAndUpdate[3])+1;
+                writeAnalysis+=findAndUpdate[0]+"~"+findAndUpdate[1]+"~insert~"+insertCount+"~update~"
+                        +findAndUpdate[5]+"~delete~"+findAndUpdate[7];
+                out1.println(writeAnalysis);
+            } else {
+                writeAnalysis+=tableAnalysis.get(i);
+                out1.println(writeAnalysis);
+            }
+        }
+        out1.close();
+        bw1.close();
+        fw1.close();
     }
 
     public static Boolean checkIfTableExists(String tableName) {
@@ -235,6 +268,14 @@ public class TableProcessor {
                     out.close();
                     bw.close();
                     fw.close();
+                    FileWriter fw1=new FileWriter(Utils.resourcePath+"tableAnalysis.tsv", true);
+                    BufferedWriter bw1 = new BufferedWriter(fw1);
+                    PrintWriter out1 = new PrintWriter(bw1);
+                    String insertAnalysis=Utils.currentDbName+"~"+ tableName+"~insert~0~update~0~delete~0";
+                    out1.println(insertAnalysis);
+                    out1.close();
+                    bw1.close();
+                    fw1.close();
                     System.out.println("Table created");
                     logManager.writeEventLog("create table", tableName);
                 }
@@ -359,6 +400,40 @@ public class TableProcessor {
                         writer.append(local_str);
                     }
                     writer.close();
+
+                    BufferedReader br3 = new BufferedReader(
+                            new FileReader(Utils.resourcePath + "tableAnalysis.tsv"));
+                    ArrayList<String> tableAnalysis = new ArrayList<String>();
+                    String st3 = "";
+
+                    // Adding data to arraylist line by line.
+                    while ((st3 = br3.readLine()) != null) {
+                        tableAnalysis.add(st3);
+                    }
+                    br3.close();
+
+                    FileWriter fw1=new FileWriter(Utils.resourcePath+"tableAnalysis.tsv", false);
+                    BufferedWriter bw1 = new BufferedWriter(fw1);
+                    PrintWriter out1 = new PrintWriter(bw1);
+
+                    String writeAnalysis="";
+                    for(int i=0;i<tableAnalysis.size();i++){
+                        writeAnalysis="";
+                        String[] findAndUpdate=tableAnalysis.get(i).split(Utils.delimiter);
+                        if(findAndUpdate[0].equals(Utils.currentDbName) && findAndUpdate[1].equals(queryTableName)){
+                            Integer deleteCount=Integer.parseInt(findAndUpdate[7])+1;
+                            writeAnalysis+=findAndUpdate[0]+"~"+findAndUpdate[1]+"~insert~"+findAndUpdate[3]+"~update~"
+                                    +findAndUpdate[5]+"~delete~"+deleteCount;
+                            out1.println(writeAnalysis);
+                        } else {
+                            writeAnalysis+=tableAnalysis.get(i);
+                            out1.println(writeAnalysis);
+                        }
+                    }
+                    out1.close();
+                    bw1.close();
+                    fw1.close();
+
                     logManager.writeEventLog("delete", queryTableName);
                     if(flag.equals("local")){
                         System.out.println(affectedRows+" rows affected");
@@ -537,7 +612,41 @@ public class TableProcessor {
                         writer.append(local_str);
                     }
                     writer.close();
+
+                    BufferedReader br3 = new BufferedReader(
+                            new FileReader(Utils.resourcePath + "tableAnalysis.tsv"));
+                    ArrayList<String> tableAnalysis = new ArrayList<String>();
+                    String st3 = "";
+
+                    // Adding data to arraylist line by line.
+                    while ((st3 = br3.readLine()) != null) {
+                        tableAnalysis.add(st3);
+                    }
+                    br3.close();
+
+                    FileWriter fw1=new FileWriter(Utils.resourcePath+"tableAnalysis.tsv", false);
+                    BufferedWriter bw1 = new BufferedWriter(fw1);
+                    PrintWriter out1 = new PrintWriter(bw1);
+
+                    String writeAnalysis="";
+                    for(int i=0;i<tableAnalysis.size();i++){
+                        writeAnalysis="";
+                        String[] findAndUpdate=tableAnalysis.get(i).split(Utils.delimiter);
+                        if(findAndUpdate[0].equals(Utils.currentDbName) && findAndUpdate[1].equals(queryTableName)){
+                            Integer updateCount=Integer.parseInt(findAndUpdate[5])+1;
+                            writeAnalysis+=findAndUpdate[0]+"~"+findAndUpdate[1]+"~insert~"+findAndUpdate[3]+"~update~"
+                            +updateCount+"~delete~"+findAndUpdate[7];
+                            out1.println(writeAnalysis);
+                        } else {
+                            writeAnalysis+=tableAnalysis.get(i);
+                            out1.println(writeAnalysis);
+                        }
+                    }
+                    out1.close();
+                    bw1.close();
+                    fw1.close();
                     logManager.writeEventLog("update", queryTableName);
+
                     if(flag.equals("local")){
                         System.out.println(affectedRows+" rows affected");
                     } else
