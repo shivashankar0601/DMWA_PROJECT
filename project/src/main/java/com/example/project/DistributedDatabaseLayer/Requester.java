@@ -33,8 +33,8 @@ public class Requester {
         return Boolean.parseBoolean(requestVM("gdd?addDB=" + dbName + "&vm=" + vmName));
     }
 
-    public String requestVMInsertQuery(String query, String flag) {
-        return requestVM("query?insert=" + query + "&flag=" + flag);
+    public String requestVMInsertQuery(String query, String flag, Boolean isTransaction) {
+        return requestVM("query?insert=" + query + "&flag=" + flag+ "&isTransaction=" + isTransaction);
     }
 
     public String requestVMUpdateQuery(String query, String flag) {

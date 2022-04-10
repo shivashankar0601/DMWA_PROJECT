@@ -14,11 +14,14 @@ import com.example.project.DistributedDatabaseLayer.Requester;
 public class TableProcessor {
 
     private String path;
+    private static String query;
+
     public TableProcessor(String path) {
         this.path = path;
     }
 
-    public static void performOperation(String query) {
+    public Boolean performOperation(String query, Boolean isTransaction) {
+        this.query = query;
         // take this method as starting point and start processing the query, after the DistributedDatabaseLayer is completed, we will have the api to be hit
         query = query.toLowerCase();
         String insertIntoRegx = "(insert\\sinto\\s[)(0-9a-zA-Z_\\s,'\"]+)[;]?"; //check if the insert query is in correct format
@@ -33,15 +36,18 @@ public class TableProcessor {
         }
 
         if (query.matches(insertIntoRegx)) {
-            insertIntoQuery(query,flag);
+            String isValid = insertIntoQuery(query,flag,isTransaction);
+            if(isValid.equals("invalid")) {
+                return false;
+            }
         }
         else if (query.matches(createTableRegx)) {
             createTableQuery(query);
         }
-        else if(query.contains("update")){
+        else if(query.contains("update")) {
             updateQuery(query,flag);
         }
-        else if(query.contains("delete")){
+        else if(query.contains("delete")) {
             deleteQuery(query,flag);
         }
         else if (query.matches(selectTableReg)) {
@@ -50,13 +56,14 @@ public class TableProcessor {
         else {
             System.out.println("Query is not correct");
         }
+        return true;
     }
 
-    public static String insertIntoQuery(String query, String flag) {
+    public static String insertIntoQuery(String query, String flag, Boolean isTransaction) {
         String tableName;
         List < String > insertValues = new ArrayList < > ();
         query = query.replaceAll("%20", " ");
-        String insertIntoPattern = "((?<=(insert\\sinto\\s))[\\w\\d_]+(?=\\s+))|((?<=\\()([\\w\\d_,'\\w'\"\\w\"]+)+(?=\\)))"; //pattern to fetch table name and values to insert
+        String insertIntoPattern = "((?<=(insert\\sinto\\s))[\\w\\d_]+(?=\\s+))|((?<=\\()([\\w\\d_,'\\w\\s'\"\\w\\s\"]+)+(?=\\)))"; //pattern to fetch table name and values to insert
         Pattern re = Pattern.compile(insertIntoPattern, Pattern.CASE_INSENSITIVE);
         Matcher m = re.matcher(query);
         while (m.find()) {
@@ -67,12 +74,15 @@ public class TableProcessor {
 
         if (tableName != null) {
             if (checkIfTableExists(tableName)) {
-                if (validateAndInsert(tableName, columnCount, insertValues)) {
-                    if (flag.equals("local")) {
+                if (validateValues(tableName, columnCount, insertValues, isTransaction)) {
+                    if (flag.equals("local") && !isTransaction) {
                         System.out.println("inserted successfully");
                     } else {
                         return "inserted successfully";
                     }
+                }  else {
+                    System.err.println("Column length is incorrect");
+                    return "invalid";
                 }
             } else {
                 if (flag.equals("remote")) {
@@ -80,17 +90,23 @@ public class TableProcessor {
                 } else {
                     Requester requester = Requester.getInstance();
                     String vmList = requester.requestVMDBCheck(Utils.currentDbName);
-                    if (vmList.split("~").length > 1 || !vmList.equals(Utils.currentDevice)) {
+                    if (vmList.split(Utils.delimiter).length > 1 || !vmList.equals(Utils.currentDevice)) {
                         requester.requestVMSetCurrentDbName(Utils.currentDbName);
-                        String response = requester.requestVMInsertQuery(query.replaceAll(" ", "%20"), "remote");
-                        System.out.println(response);
+                        String response = requester.requestVMInsertQuery(query.replaceAll(" ", "%20"), "remote", isTransaction);
+                        if(response.equals("invalid")) {
+                            return "invalid";
+                        } else {
+                            System.out.println(response);
+                        }
                     } else {
                         System.out.println("table does not exist");
+                        return "invalid";
                     }
                 }
             }
         } else {
             System.err.println("query is incorrect");
+            return "invalid";
         }
         return "";
     }
@@ -99,18 +115,17 @@ public class TableProcessor {
         Utils.currentDbName = currentDbName;
     }
 
-    public static Boolean validateAndInsert(String tableName, int columnCount, List < String > arr) {
+    public static Boolean validateValues(String tableName, int columnCount, List<String> arr, Boolean isTransaction) {
         try {
             BufferedReader br = new BufferedReader(new FileReader(Utils.resourcePath + Utils.currentDbName + "/" + tableName + ".tsv"));
             String firstLine = br.readLine();
             String[] firstLineSplit = firstLine.split(Utils.delimiter);
             if (columnCount == Integer.parseInt(firstLineSplit[1])) {
-                PrintWriter out = new PrintWriter(new FileWriter(Utils.resourcePath + Utils.currentDbName + "/" + tableName + ".tsv", true));
-                for (int i = 1; i < arr.size(); i++) {
-                    out.append("\n");
-                    out.append(arr.get(i).replaceAll(",", "~").replaceAll("['\"]", ""));
+                if (!isTransaction) {
+                    insertValues(tableName, arr);
+                } else {
+                    Utils.transQueryList.add(query);
                 }
-                out.close();
                 return true;
             } else {
                 return false;
@@ -121,6 +136,15 @@ public class TableProcessor {
             e.printStackTrace();
         }
         return false;
+    }
+
+    private static void insertValues(String tableName, List<String> arr) throws IOException {
+        PrintWriter out = new PrintWriter(new FileWriter(Utils.resourcePath + Utils.currentDbName + "/" + tableName + ".tsv", true));
+        for (int i = 1; i < arr.size(); i++) {
+            out.append("\n");
+            out.append(arr.get(i).replaceAll(",", "~").replaceAll("['\"]", ""));
+        }
+        out.close();
     }
 
     public static Boolean checkIfTableExists(String tableName) {
