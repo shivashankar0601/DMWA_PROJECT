@@ -4,9 +4,12 @@ import com.example.project.DataExport.ExportEngine;
 import com.example.project.QueryManager.DatabaseProcessor;
 import com.example.project.QueryManager.TableProcessor;
 import com.example.project.Utilities.Utils;
+import org.apache.tomcat.util.buf.StringUtils;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -74,8 +77,10 @@ public class Responder {
     public String getAllTablesFromDB(@RequestParam(value = "db", defaultValue = "") String dbName, @RequestParam(value = "vm", defaultValue = "") boolean shouldRequestVM) {
         return ExportEngine.getAllAvailableTables(dbName, shouldRequestVM);
     }
-
-
+    @RequestMapping(value = "/readTable", params = "table", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public String getWholeTablecontent(String tableName, String dbName){
+        return StringUtils.join(Arrays.asList(ExportEngine.readTableData(tableName,dbName)),Utils.delimiter.charAt(0));
+    }
 
 
 }

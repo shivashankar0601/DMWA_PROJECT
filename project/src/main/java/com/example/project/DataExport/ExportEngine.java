@@ -12,8 +12,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.example.project.QueryManager.DatabaseProcessor.checkIsLocalDB;
-
 public class ExportEngine {
     private UserCredentials user = null;
     private BufferedReader input = null;
@@ -99,54 +97,80 @@ public class ExportEngine {
 
             for(String table : tables){
                 String [] data = readTableData(table, dbName);
+                export.append(data[0]+"\n");
+                export.append(data[1]+"\n");
             }
 
-
-
-
-
-
-
-
-
-
-
+            export.flush();
+            export.close();
+            status = true;
 
         } catch (IOException e) {
             e.printStackTrace();
+            status=false;
         }
 
         return status;
     }
 
-    private String[] readTableData(String table, String dbName) {
+    public static String[] readTableData(String table, String dbName) {
         String [] data = new String[2]; // create statement and the data in one line
 
         if(DatabaseProcessor.checkIsLocalDB(dbName)){
             try {
-                BufferedReader br = new BufferedReader(new FileReader(Utils.resourcePath + dbName));
+                String path = Utils.resourcePath + dbName+"/"+table+".tsv";
+                BufferedReader br = new BufferedReader(new FileReader(path));
                 // for create query
-                int cols = Integer.parseInt(br.readLine().split(Utils.delimiter)[1]);
 
-                String columns = br.readLine();
-                String keys = prepareKeys(columns.split(Utils.delimiter),cols);
-                columns = prepareColumns(columns.split(Utils.delimiter), cols);
+                data[0] = br.readLine(); // check with others if they are ok with this
 
-
-
-
-                data[0] = String.format("create table %s ( %s ) %s;",table,columns,keys);
+//                int cols = Integer.parseInt(br.readLine().split(Utils.delimiter)[1]);
+//
+//                String line = br.readLine();
+//                String keys = "";
+//                if(line.toLowerCase().contains("primary key") || line.toLowerCase().contains("foreign key"))
+//                    keys = prepareKeys(line.split(Utils.delimiter),cols);
+//                String columns = prepareColumns(line.split(Utils.delimiter), cols);
+//
+//                data[0] = String.format("create table %s ( %s ) %s;",table,columns,keys);
+                br.readLine();
+                br.readLine();
                 String line = null;
                 // for all values
+                StringBuilder sb = new StringBuilder();
+                sb.append("insert into "+table+" values ");
                 while((line=br.readLine())!=null){
+                    sb.append("(");
+                    if(line.contains(Utils.delimiter)) {
 
+                        String splits[] = line.split("~");
+                        for (int i = 0; i < splits.length; i++) {
+                            try {
+                                sb.append(Integer.parseInt(splits[i]));
+                            } catch (Exception e) {
+                                if (!splits[i].contains("'"))
+                                    sb.append("'" + splits[i] + "'");
+                                else
+                                    sb.append(splits[i]);
+                            }
+                            if (i != splits.length - 1)
+                                sb.append(",");
+                        }
+                    }
+                    else{
+                        sb.append(line);
+                    }
+                    sb.append("),");
                 }
+                data[1]=sb.toString().substring(0,sb.length()-1)+";";
             }
             catch(Exception e){
 
             }
         }
-
+        else{
+            data = Requester.getInstance().requestVMWholeTable(table, dbName);
+        }
 
 
         return data;

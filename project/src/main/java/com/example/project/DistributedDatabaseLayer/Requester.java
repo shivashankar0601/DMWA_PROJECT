@@ -61,6 +61,11 @@ public class Requester {
         return requestVM("tables?db="+dbName+"&vm="+isVmRequest);
     }
 
+    public String[] requestVMWholeTable(String tableName, String dbName){
+        return  requestVM("readTable?table="+tableName+"&db="+dbName).split(Utils.delimiter);
+    }
+
+
 
 
     // parameter is a method name with all the parameters
