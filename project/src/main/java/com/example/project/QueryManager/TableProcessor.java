@@ -5,10 +5,7 @@ import com.example.project.Utilities.Utils;
 
 import java.io.*;
 import java.lang.reflect.UndeclaredThrowableException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import com.example.project.DistributedDatabaseLayer.Requester;
@@ -782,7 +779,8 @@ public class TableProcessor {
                         if(output.equals("invalid")) {
                             System.out.println("Column name is incorrect");
                         } else {
-                            System.out.println("output: \n" + output);
+                            beautifyOutput(output,tableName);
+                            //System.out.println("output: \n" + output);
                         }
                         return "";
                     }
@@ -833,6 +831,74 @@ public class TableProcessor {
         }
         return "";
     }
+
+
+    private static void beautifyOutput(String data, String tableName) {
+        List<String> cols = getColumnsFromTable(tableName);
+
+        String dashes = new String(new char[cols.size()*20]).replace('\0', '-');
+
+        if(cols.size()!=0){
+            printTableHeader(cols, dashes);
+        }
+        else{
+            // i wonder if this return ever has to execute
+            return;
+        }
+
+        List<String> vals = Arrays.asList(data.split("\\r?\\n"));
+
+        // empty table without values
+        if(vals.size()==0)
+            return;
+
+        for(int i=0;i<vals.size();i++) {
+            String valsSplit[] = vals.get(i).split(Utils.delimiter);
+            for (int j=0;j<valsSplit.length;j++)
+                System.out.print(String.format("%20s", valsSplit[j]));
+            System.out.println();
+        }
+        System.out.println(dashes);
+
+    }
+
+    private static void printTableHeader(List<String> cols, String dashes) {
+        System.out.println(dashes);
+        for(int i=0;i<cols.size();i++)
+            System.out.print(String.format("%20s",cols.get(i)));
+        System.out.println("\n"+dashes);
+    }
+
+
+    private static List<String> getColumnsFromTable(String tableName) {
+        ArrayList<String> res = new ArrayList<>();
+        try {
+
+            BufferedReader br = new BufferedReader(new FileReader(Utils.resourcePath + Utils.currentDbName + "/" + tableName + ".tsv"));
+            br.readLine();
+            int count = Integer.parseInt(br.readLine().split(Utils.delimiter)[1]);
+
+            String col[] = br.readLine().split(Utils.delimiter);
+            for(int i=0;i<count;i++){
+                res.add(col[i].split(" ")[0]);
+            }
+            return res;
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+
+        return res;
+    }
+
+
+
+
+
+
+
+
+
 
     //the extracted information from the selectQuery is passed to this method where the existing data is processed and the required value is returned
     public static String selectReadTable(String tableName, ArrayList<String> columnList, String[] keyValuePair) throws IOException {
