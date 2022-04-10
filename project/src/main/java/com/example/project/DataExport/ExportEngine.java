@@ -1,6 +1,7 @@
 package com.example.project.DataExport;
 
 import com.example.project.DistributedDatabaseLayer.Requester;
+import com.example.project.LogManager.LogManager;
 import com.example.project.QueryManager.DatabaseProcessor;
 import com.example.project.UIAndSecurity.UserCredentials;
 import com.example.project.Utilities.Utils;
@@ -16,6 +17,8 @@ public class ExportEngine {
     private UserCredentials user = null;
     private BufferedReader input = null;
     private String path = null;
+
+    static LogManager logManager = new LogManager();
 
     public ExportEngine(BufferedReader input, UserCredentials currentUser, String path) {
         this.user = currentUser;
@@ -61,6 +64,7 @@ public class ExportEngine {
                             break;
                         } catch (InterruptedException e) {
                             //e.printStackTrace();
+                            logManager.writeCrashReportsToEventLogs(e.getMessage());
                         }
                     } else {
                         // perform the data export operation
@@ -85,6 +89,7 @@ public class ExportEngine {
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             e.printStackTrace();
         }
 
@@ -107,6 +112,7 @@ public class ExportEngine {
             status = true;
 
         } catch (IOException e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             e.printStackTrace();
             status = false;
         }
@@ -142,6 +148,7 @@ public class ExportEngine {
                             try {
                                 sb.append(Integer.parseInt(splits[i]));
                             } catch (Exception e) {
+                                logManager.writeCrashReportsToEventLogs(e.getMessage());
                                 if (!splits[i].contains("'"))
                                     sb.append("'" + splits[i] + "'");
                                 else
@@ -158,7 +165,7 @@ public class ExportEngine {
                 // when there is no data in the tables, i mean no rows in the table (empty table)
                 data[1] = sb.toString().equalsIgnoreCase("insert into " + table + " values ") ? "" : sb.toString().substring(0, sb.length() - 1) + ";";
             } catch (Exception e) {
-
+                logManager.writeCrashReportsToEventLogs(e.getMessage());
             }
         } else {
             data = Requester.getInstance().requestVMWholeTable(table, dbName);
@@ -227,6 +234,7 @@ public class ExportEngine {
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {
+                logManager.writeCrashReportsToEventLogs(e.getMessage());
                 e.printStackTrace();
             }
             return dbs;

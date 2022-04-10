@@ -11,8 +11,8 @@ import java.util.List;
 public class LogManager {
     // save the log file path for general logs, event logs and query logs
     private static String generalLogPath = Utils.resourcePath + "Logs/generalLogs";
-    private String eventLogPath = Utils.resourcePath + "Logs/eventLogs";
-    private String queryLogPath = Utils.resourcePath + "Logs/queryLogs";
+    private static String eventLogPath = Utils.resourcePath + "Logs/eventLogs";
+    private static String queryLogPath = Utils.resourcePath + "Logs/queryLogs";
 
     ExportEngine engine = new ExportEngine(null, null, null);
 
@@ -86,7 +86,7 @@ public class LogManager {
                         + "\n");
                 pw.close();
             } else {
-                if (Utils.createDirectory(Utils.resourcePath, "Logs") && Utils.createFile(queryLogPath, "")) {
+                if (Utils.createDirectory(Utils.resourcePath, "Logs") && Utils.createFile(eventLogPath, "")) {
                     fw = new FileWriter(eventLogPath + ".tsv", true);
                     bw = new BufferedWriter(fw);
                     pw = new PrintWriter(bw);
@@ -137,6 +137,39 @@ public class LogManager {
                     pw.close();
                 }
 
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void writeCrashReportsToEventLogs(String message) {
+        FileWriter fw = null;
+        BufferedWriter bw = null;
+        PrintWriter pw = null;
+        try {
+            File file = new File(eventLogPath + ".tsv");
+            if (file.exists()) {
+                fw = new FileWriter(eventLogPath + ".tsv", true);
+                bw = new BufferedWriter(fw);
+                pw = new PrintWriter(bw);
+                pw.print("crashReport:" + message + "~"
+                        + "deviceName:" + Utils.currentDevice + "~"
+                        + "time:" + (new SimpleDateFormat("dd/MM/yyyy_HH:mm:ss").format(Calendar.getInstance().getTime()))
+                        + "\n");
+                pw.close();
+            } else {
+                if (Utils.createDirectory(Utils.resourcePath, "Logs") && Utils.createFile(eventLogPath, "")) {
+                    fw = new FileWriter(eventLogPath + ".tsv", true);
+                    bw = new BufferedWriter(fw);
+                    pw = new PrintWriter(bw);
+                    pw.print("crashReport:" + message + "~"
+                            + "deviceName:" + Utils.currentDevice + "~"
+                            + "time:" + (new SimpleDateFormat("dd/MM/yyyy_HH:mm:ss").format(Calendar.getInstance().getTime()))
+                            + "\n");
+                    pw.close();
+                }
             }
 
         } catch (IOException e) {

@@ -95,6 +95,7 @@ public class QueryProcessor {
                 }
             } while (option != 0);
         } catch (IOException e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             System.out.println(e.getLocalizedMessage());
         }
     }

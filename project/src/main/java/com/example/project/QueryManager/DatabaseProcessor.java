@@ -1,12 +1,15 @@
 package com.example.project.QueryManager;
 
 import com.example.project.DistributedDatabaseLayer.Requester;
+import com.example.project.LogManager.LogManager;
 import com.example.project.Utilities.Utils;
 import jdk.jshell.execution.Util;
 
 import java.io.*;
 
 public class DatabaseProcessor {
+
+    static LogManager logManager = new LogManager();
 
     public String performOperation(String query) throws IOException {
         query = query.toLowerCase();
@@ -178,10 +181,12 @@ public class DatabaseProcessor {
             if(res.length()>0)
                 return res;
         } catch (FileNotFoundException e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             if(!Utils.isVMRequest)
                 System.err.println(Utils.gddNotFound);
             // at least an empty gdd should be made available by the time application is created
         } catch (IOException e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             e.printStackTrace();
         }
         return "";
@@ -195,10 +200,12 @@ public class DatabaseProcessor {
             fileWriter.close();
             return true;
         } catch (FileNotFoundException e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             if(!Utils.isVMRequest)
                 System.err.println(Utils.gddNotFound);
             // at least an empty gdd should be made available by the time application is created
         } catch (IOException e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             e.printStackTrace();
         }
         return false;

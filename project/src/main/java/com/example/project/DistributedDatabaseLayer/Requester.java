@@ -1,5 +1,6 @@
 package com.example.project.DistributedDatabaseLayer;
 
+import com.example.project.LogManager.LogManager;
 import com.example.project.Utilities.Utils;
 
 import java.io.IOException;
@@ -11,6 +12,7 @@ import java.net.http.HttpResponse;
 public class Requester {
 
     private static Requester requester = null;
+    LogManager logManager = new LogManager();
 
     public Requester() {
     }
@@ -84,7 +86,9 @@ public class Requester {
 
         } catch (IOException e) {
             e.printStackTrace();
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
         } catch (InterruptedException e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             e.printStackTrace();
         }
         // if an error occurred, then we will return null instead of the response object

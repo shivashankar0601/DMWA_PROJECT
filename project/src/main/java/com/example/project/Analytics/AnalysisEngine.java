@@ -1,5 +1,6 @@
 package com.example.project.Analytics;
 
+import com.example.project.LogManager.LogManager;
 import com.example.project.QueryManager.DatabaseProcessor;
 import com.example.project.QueryManager.TableProcessor;
 import com.example.project.UIAndSecurity.UserCredentials;
@@ -12,6 +13,8 @@ public class AnalysisEngine {
     private UserCredentials user;
     private BufferedReader input;
     private String path;
+
+    LogManager logManager = new LogManager();
 
     public AnalysisEngine(BufferedReader input, UserCredentials currentUser, String path) {
         this.user = currentUser;
@@ -39,6 +42,7 @@ public class AnalysisEngine {
                 }
             } while (option != 0);
         } catch (IOException e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             System.out.println(e.getLocalizedMessage());
         }
     }

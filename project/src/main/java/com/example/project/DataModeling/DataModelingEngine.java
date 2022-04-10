@@ -1,6 +1,7 @@
 package com.example.project.DataModeling;
 
 import com.example.project.DataExport.ExportEngine;
+import com.example.project.LogManager.LogManager;
 import com.example.project.DistributedDatabaseLayer.Requester;
 import com.example.project.UIAndSecurity.UserCredentials;
 import com.example.project.Utilities.Utils;
@@ -14,6 +15,8 @@ public class DataModelingEngine {
     private BufferedReader input = null;
     private UserCredentials currentUser = null;
     private String path = null;
+    
+    LogManager logManager = new LogManager();
 
     public DataModelingEngine(BufferedReader input, UserCredentials currentUser, String path) {
         this.input = input;
@@ -59,6 +62,7 @@ public class DataModelingEngine {
                             break;
                         } catch (InterruptedException e) {
                             //e.printStackTrace();
+                            logManager.writeCrashReportsToEventLogs(e.getMessage());
                         }
                     } else {
                         if (startDataModeling(ipt.trim())) {
@@ -80,6 +84,7 @@ public class DataModelingEngine {
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             e.printStackTrace();
         }
     }

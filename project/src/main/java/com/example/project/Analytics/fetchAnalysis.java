@@ -1,5 +1,6 @@
 package com.example.project.Analytics;
 
+import com.example.project.LogManager.LogManager;
 import com.example.project.Utilities.Utils;
 
 import java.io.*;
@@ -8,6 +9,7 @@ import java.util.ArrayList;
 public class fetchAnalysis {
     private static String query;
 
+    LogManager logManager = new LogManager();
 
     public void performAnalysis(String query){
         this.query=query.toLowerCase();
@@ -137,6 +139,7 @@ public class fetchAnalysis {
             fw1.close();
 
         } catch (Exception e){
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             System.out.println(e);
         }
     }
@@ -176,6 +179,7 @@ public class fetchAnalysis {
             fw1.close();
 
         } catch (Exception e){
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             System.out.println(e);
         }
     }
@@ -214,6 +218,7 @@ public class fetchAnalysis {
             fw1.close();
 
         } catch (Exception e){
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             System.out.println(e);
         }
     }
