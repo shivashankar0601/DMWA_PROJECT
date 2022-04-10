@@ -76,6 +76,7 @@ public class QueryProcessor {
                                 break;
                             }
                         } while(true);
+                        Utils.transQueryList.clear();
                         break;
                 }
             } while (option != 0);
