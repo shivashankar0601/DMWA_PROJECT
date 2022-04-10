@@ -195,7 +195,8 @@ public class DatabaseProcessor {
             fileWriter.close();
             return true;
         } catch (FileNotFoundException e) {
-            System.err.println(Utils.gddNotFound);
+            if(!Utils.isVMRequest)
+                System.err.println(Utils.gddNotFound);
             // at least an empty gdd should be made available by the time application is created
         } catch (IOException e) {
             e.printStackTrace();
