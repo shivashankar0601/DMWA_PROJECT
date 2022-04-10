@@ -129,8 +129,8 @@ public class fetchAnalysis {
             FileWriter fw1=new FileWriter(Utils.resourcePath+"updateCountAnalysis.tsv", false);
             BufferedWriter bw1 = new BufferedWriter(fw1);
             PrintWriter out1 = new PrintWriter(bw1);
-            for(int i=0;i<tableAnalysis.size();i++){
-                String[] out=tableAnalysis.get(i).split(Utils.delimiter);
+            for(int i=0;i<resultData.size();i++){
+                String[] out=resultData.get(i).split(Utils.delimiter);
                 System.out.println("Total "+out[5]+" Update operations are performed on "+out[1]);
                 out1.println("Total "+out[5]+" Update operations are performed on "+out[1]);
             }
@@ -169,8 +169,8 @@ public class fetchAnalysis {
             BufferedWriter bw1 = new BufferedWriter(fw1);
             PrintWriter out1 = new PrintWriter(bw1);
 
-            for(int i=0;i<tableAnalysis.size();i++){
-                String[] out=tableAnalysis.get(i).split(Utils.delimiter);
+            for(int i=0;i<resultData.size();i++){
+                String[] out=resultData.get(i).split(Utils.delimiter);
                 System.out.println("Total "+out[3]+" Update operations are performed on "+out[1]);
                 out1.println("Total "+out[3]+" Update operations are performed on "+out[1]);
             }
@@ -208,8 +208,8 @@ public class fetchAnalysis {
             BufferedWriter bw1 = new BufferedWriter(fw1);
             PrintWriter out1 = new PrintWriter(bw1);
 
-            for(int i=0;i<tableAnalysis.size();i++){
-                String[] out=tableAnalysis.get(i).split(Utils.delimiter);
+            for(int i=0;i<resultData.size();i++){
+                String[] out=resultData.get(i).split(Utils.delimiter);
                 System.out.println("Total "+out[7]+" Delete operations are performed on "+out[1]);
                 out1.println("Total "+out[7]+" Delete operations are performed on "+out[1]);
             }
