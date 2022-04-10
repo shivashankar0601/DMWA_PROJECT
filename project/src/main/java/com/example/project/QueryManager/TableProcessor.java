@@ -13,6 +13,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import com.example.project.DistributedDatabaseLayer.Requester;
 
+import static java.lang.Thread.sleep;
+
 public class TableProcessor {
 
     private String path;
@@ -82,23 +84,35 @@ public class TableProcessor {
         }
         int columnCount = insertValues.get(1).split(",").length; //fetching column count
         tableName = insertValues.get(0); //fetching table name
-
+        while(Utils.tableLocked.contains(tableName)) {
+            try {
+                System.out.println("Waiting for the lock to get released...");
+                sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        Utils.tableLocked.add(tableName);
         if (tableName != null) {
             if (checkIfTableExists(tableName)) {
                 if (validateValues(tableName, columnCount, insertValues, isTransaction)) {
                     if (flag.equals("local") && !isTransaction) {
                         System.out.println("inserted successfully");
                     } else if(flag.equals("remote") && !isTransaction){
+                        Utils.tableLocked.remove(Utils.tableLocked.get(Integer.parseInt(tableName)));
                         return "success";
                     }else {
+                        Utils.tableLocked.remove(Utils.tableLocked.get(Integer.parseInt(tableName)));
                         return "inserted successfully";
                     }
                 }  else {
                     System.err.println("Column length is incorrect");
+                    Utils.tableLocked.remove(Utils.tableLocked.get(Integer.parseInt(tableName)));
                     return "invalid";
                 }
             } else {
                 if (flag.equals("remote")) {
+                    Utils.tableLocked.remove(Utils.tableLocked.get(Integer.parseInt(tableName)));
                     return "table does not exist";
                 } else {
                     Requester requester = Requester.getInstance();
@@ -107,6 +121,7 @@ public class TableProcessor {
                         requester.requestVMSetCurrentDbName(Utils.currentDbName);
                         String response = requester.requestVMInsertQuery(query.replaceAll(" ", "%20"), "remote", isTransaction);
                         if(response.equals("invalid")) {
+                            Utils.tableLocked.remove(Utils.tableLocked.get(Integer.parseInt(tableName)));
                             return "invalid";
                         } else if(!response.equals("invalid") && response.equals("inserted successfully")){
                             Utils.transQueryList.add(query);
@@ -115,6 +130,7 @@ public class TableProcessor {
                         }
                     } else {
                         System.out.println("table does not exist");
+                        Utils.tableLocked.remove(Utils.tableLocked.get(Integer.parseInt(tableName)));
                         return "invalid";
                     }
                 }
@@ -123,6 +139,7 @@ public class TableProcessor {
             System.err.println("query is incorrect");
             return "invalid";
         }
+        Utils.tableLocked.remove(tableName);
         return "";
     }
 
