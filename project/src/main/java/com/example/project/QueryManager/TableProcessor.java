@@ -248,7 +248,7 @@ public class TableProcessor {
             String afterWhere = query.substring(query.indexOf("where") + 6, query.indexOf(";") == -1 ? query.length() : query.length() - 1);
 
             // Variable for conditions after where Clause
-            String[] condition = afterWhere.replace("\"","").split("=");
+            String[] condition = afterWhere.replace("\"","").replace("'","").split("=");
 
             BufferedReader br = new BufferedReader(
                     new FileReader(Utils.resourcePath + Utils.currentDbName + "/metadata.tsv"));
@@ -302,7 +302,7 @@ public class TableProcessor {
                     }
                 }
 
-                if(!columns.contains(condition[0].toLowerCase())){
+                if(!columns.contains(condition[0].trim().toLowerCase())){
                     throw new Exception("Table "+queryTableName+" does not contain column named '"
                             +condition[0]+"'.");
                 }
@@ -320,7 +320,7 @@ public class TableProcessor {
 
                 for(int i=0;i< table.size();i++){
                     // If query conditions are fulfilled, removing the row
-                    if(table.get(i).containsKey(condition[0]) && table.get(i).containsValue(condition[1])){
+                    if(table.get(i).containsKey(condition[0].trim()) && table.get(i).containsValue(condition[1].trim())){
                         table.remove(i);
                         affectedRows++;
                     }
@@ -379,7 +379,7 @@ public class TableProcessor {
                         requester.requestVMSetCurrentDbName(Utils.currentDbName);
                         String response = requester.requestVMDeleteQuery(query.replaceAll(" ", "%20"), "remote", isTransaction);
                         System.out.println(response);
-                        if(isTransaction){
+                        if(response.equals("invalid")){
                             return "invalid";
                         }
                         return response;
@@ -413,14 +413,14 @@ public class TableProcessor {
             String afterWhere = query.substring(query.indexOf("where") + 6, query.indexOf(";") == -1 ? query.length() : query.length() - 1);
 
             // Variable for conditions after where Clause
-            String[] condition = afterWhere.replace("\"","").split("=");
+            String[] condition = afterWhere.replace("\"","").replace("'","").split("=");
             String[] KV = keyValQuery.split(",");
 
             // Parsing and adding [column,new-value] to list
             for (int i = 0; i < KV.length; i++) {
                 ArrayList<String> newl = new ArrayList();
                 newl.add(KV[i].substring(0, KV[i].indexOf("=")).trim());
-                newl.add(KV[i].substring(KV[i].indexOf("=") + 1, KV[i].length()).trim().replace("\"",""));
+                newl.add(KV[i].substring(KV[i].indexOf("=") + 1, KV[i].length()).trim().replace("\"","").replace("'",""));
                 keyVal.add(newl);
             }
 
@@ -474,7 +474,7 @@ public class TableProcessor {
                                 +iter.next().get(0).toString()+"'.");
                     }
                 }
-                if(!columns.contains(condition[0].toLowerCase())){
+                if(!columns.contains(condition[0].trim().toLowerCase())){
                     throw new Exception("Table "+queryTableName+" does not contain column named '"
                             +condition[0]+"'.");
                 }
@@ -492,7 +492,7 @@ public class TableProcessor {
 
                 for(int i=0;i< table.size();i++){
                     // If query conditions are fulfilled, replacing old data with new one
-                    if(table.get(i).containsKey(condition[0]) && table.get(i).containsValue(condition[1])){
+                    if(table.get(i).containsKey(condition[0].trim()) && table.get(i).containsValue(condition[1].trim())){
                         for(int iter1=0;iter1< keyVal.size();iter1++){
                             table.get(i).replace(keyVal.get(iter1).get(0),keyVal.get(iter1).get(1));
                         }
@@ -510,7 +510,7 @@ public class TableProcessor {
                     writer.append(tabledata.get(0));
                     writer.append("\n");
                     writer.append(tabledata.get(1));
-                    String final_str="";
+
                     int val;
 
                     for(int i=0;i< table.size();i++){
@@ -523,15 +523,12 @@ public class TableProcessor {
                             String value=table.get(i).get(key).toString();
                             if(val==0){
                                 local_str+=value;
-                                final_str+=value;
                                 val++;
                             } else {
                                 local_str+="~"+value;
-                                final_str+="~"+value;
                             }
                         }
                         writer.append(local_str);
-                        final_str+="\n";
                     }
                     writer.close();
                     if(flag.equals("local")){
@@ -553,7 +550,7 @@ public class TableProcessor {
                         requester.requestVMSetCurrentDbName(Utils.currentDbName);
                         String response = requester.requestVMUpdateQuery(query.replaceAll(" ", "%20"), "remote", isTransaction);
                         System.out.println(response);
-                        if(isTransaction){
+                        if(response.equals("invalid")){
                             return "invalid";
                         }
                         return response;
