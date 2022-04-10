@@ -67,10 +67,10 @@ public class Utils {
     public static boolean loadConfiguration() throws IOException {
         try {
 
-            File rPath = new File("./resource");
+            File rPath = new File("./resources");
             if(!rPath.exists()){
                 rPath.mkdir();
-                System.out.println("resource directory created successfully");
+                System.out.println("resources directory created successfully");
                 FileWriter conf = new FileWriter(resourcePath+"configuration.tsv");
                 conf.write("name~vm1\nvm~0.0.0.0\ngdd~true");//default configuration
                 conf.flush();

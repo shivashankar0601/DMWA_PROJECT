@@ -67,7 +67,9 @@ public class ExportEngine {
                         // perform the data export operation
 
                         if(createExportFile(Arrays.asList(tables.split(Utils.delimiter)), ipt.trim())){
-                            System.out.println(ipt.trim() + " Database exported successfully to {some path}");
+                            File cPath = new File(".");
+                            System.out.println(cPath.getCanonicalPath());
+                            System.out.println(ipt.trim() + " Database exported successfully to "+cPath.getCanonicalPath()+"\\"+ipt.trim()+"_exported_data.sql");
                         }
                         else{
                             System.err.println(ipt.trim() + " Database export failed");
