@@ -579,14 +579,14 @@ public class TableProcessor {
         // defining empty method to build the project before pushing, you can replace the body with your functionality hardee
         String processedQuery = "";
         String tableName = "";
-        String columnNameToCheckWhereCondition = "";
-        String columnValueToCheckWhereCondition = "";
+        //String columnNameToCheckWhereCondition = "";
+        //String columnValueToCheckWhereCondition = "";
         String[] columnDetails = new String[2];
         String output = "";
         ArrayList<String> columnNameList = new ArrayList<String>();
         try {
             if (query.contains(";")) {
-                processedQuery = query.substring(1, query.indexOf(';') - 1);
+                processedQuery = query.substring(7, query.indexOf(';'));
             } else {
                 processedQuery = query.substring(7, query.length());
             }
