@@ -1,5 +1,6 @@
 package com.example.project.UIAndSecurity;
 
+import com.example.project.Analytics.AnalysisEngine;
 import com.example.project.DataExport.ExportEngine;
 import com.example.project.DataModeling.DataModelingEngine;
 import com.example.project.QueryManager.QueryProcessor;
@@ -59,6 +60,8 @@ public class Menu {
                         dataModelingEngine.begin();
                         break;
                     case 4:
+                        AnalysisEngine analysisEngine=new AnalysisEngine(input, currentUser, path);
+                        analysisEngine.begin();
                         break;
                     default:
                         System.out.println("Invalid option selected, Try again");

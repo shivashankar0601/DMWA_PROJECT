@@ -3,6 +3,7 @@ package com.example.project.Utilities;
 import java.io.*;
 import java.math.BigInteger;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 
 public class Utils {
 
@@ -21,6 +22,9 @@ public class Utils {
     // Error messages which are commonly used
     public static String gddNotFound = "Global Data Dictionary is not found";
     public static String dbMetadataNotFound = "Metadata file not found";
+
+    //queryList for Transaction
+    public static ArrayList<String> transQueryList = new ArrayList<>();
 
     public static String hashWithMD5(String user_name) {
         try {
@@ -62,6 +66,18 @@ public class Utils {
     // all the important parameters for the application are loaded beforehand for proper execution
     public static boolean loadConfiguration() throws IOException {
         try {
+
+            File rPath = new File("./resources");
+            if(!rPath.exists()){
+                rPath.mkdir();
+                System.out.println("resources directory created successfully");
+                FileWriter conf = new FileWriter(resourcePath+"configuration.tsv");
+                conf.write("name~vm1\nvm~0.0.0.0\ngdd~true");//default configuration
+                conf.flush();
+                conf.close();
+                System.out.println("successfully created configuration file");
+            }
+
             BufferedReader br = new BufferedReader(new FileReader(resourcePath + "configuration.tsv"));
             String line = "";
             while ((line = br.readLine()) != null) {

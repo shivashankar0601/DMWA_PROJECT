@@ -33,16 +33,16 @@ public class Requester {
         return Boolean.parseBoolean(requestVM("gdd?addDB=" + dbName + "&vm=" + vmName));
     }
 
-    public String requestVMInsertQuery(String query, String flag) {
-        return requestVM("query?insert=" + query + "&flag=" + flag);
+    public String requestVMInsertQuery(String query, String flag, Boolean isTransaction) {
+        return requestVM("query?insert=" + query + "&flag=" + flag+ "&isTransaction=" + isTransaction);
     }
 
-    public String requestVMUpdateQuery(String query, String flag) {
-        return requestVM("query?update=" + query + "&flag=" + flag);
+    public String requestVMUpdateQuery(String query, String flag, Boolean isTransaction) {
+        return requestVM("query?update=" + query + "&flag=" + flag+ "&isTransaction=" + isTransaction);
     }
 
-    public String requestVMDeleteQuery(String query, String flag) {
-        return requestVM("query?delete=" + query + "&flag=" + flag);
+    public String requestVMDeleteQuery(String query, String flag, Boolean isTransaction) {
+        return requestVM("query?delete=" + query + "&flag=" + flag+ "&isTransaction=" + isTransaction);
     }
 
     public String requestVMSelectQuery(String query, String flag) {
@@ -60,6 +60,11 @@ public class Requester {
     public String requestVMAllTables(String dbName, boolean isVmRequest) {
         return requestVM("tables?db="+dbName+"&vm="+isVmRequest);
     }
+
+    public String[] requestVMWholeTable(String tableName, String dbName){
+        return  requestVM("readTable?table="+tableName+"&db="+dbName).split(Utils.delimiter);
+    }
+
 
 
 
