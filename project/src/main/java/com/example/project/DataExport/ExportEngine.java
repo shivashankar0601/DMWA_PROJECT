@@ -118,7 +118,7 @@ public class ExportEngine {
     public static String[] readTableData(String table, String dbName) {
         String [] data = new String[2]; // create statement and the data in one line
 
-        if(DatabaseProcessor.checkIsLocalDB(dbName)){
+        if(DatabaseProcessor.checkIsLocalDB(dbName) && isLocalTable(table,dbName)){
             try {
                 String path = Utils.resourcePath + dbName+"/"+table+".tsv";
                 BufferedReader br = new BufferedReader(new FileReader(path));
@@ -176,6 +176,14 @@ public class ExportEngine {
 
 
         return data;
+    }
+
+    private static boolean isLocalTable(String table, String dbName) {
+        boolean res = false;
+        File file = new File(Utils.resourcePath+dbName+"/"+table+".tsv");
+        if(file.exists())
+            res=true;
+        return res;
     }
 //
 //    public String prepareKeys(String[] split, int cols) {
