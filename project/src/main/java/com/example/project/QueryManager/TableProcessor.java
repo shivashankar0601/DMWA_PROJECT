@@ -129,6 +129,7 @@ public class TableProcessor {
     public static Boolean validateValues(String tableName, int columnCount, List<String> arr, Boolean isTransaction) {
         try {
             BufferedReader br = new BufferedReader(new FileReader(Utils.resourcePath + Utils.currentDbName + "/" + tableName + ".tsv"));
+            br.readLine();// since i added the query in the first line, i am reading an empty line to not cause any discrepancies
             String firstLine = br.readLine();
             String[] firstLineSplit = firstLine.split(Utils.delimiter);
             if (columnCount == Integer.parseInt(firstLineSplit[1])) {
@@ -217,7 +218,7 @@ public class TableProcessor {
                         output += column.replaceAll("[()]", " ").replaceAll("  ", " ").trim() + "~";
                     }
                     columnCount = columnCount - notColumnCount;
-                    output = "columnCount~" + columnCount + "\n" + output;
+                    output = query+"\ncolumnCount~" + columnCount + "\n" + output;
 
                     output = output.substring(0, output.length() - 1);
                     FileWriter fileWriter = new FileWriter(Utils.resourcePath+tablePath, true);
@@ -261,6 +262,8 @@ public class TableProcessor {
                                 queryTableName+ ".tsv"));
                 ArrayList<String> tabledata = new ArrayList<String>();
                 String st2 = "";
+
+                br2.readLine();// ignore the very first line, so i am reading and ignoring it
 
                 // Adding data to arraylist line by line.
                 while ((st2 = br2.readLine()) != null) {
@@ -424,6 +427,8 @@ public class TableProcessor {
                                 queryTableName + ".tsv"));
                 ArrayList<String> tabledata = new ArrayList<String>();
                 String st2 = "";
+
+                br2.readLine();// reading a line to ignore the structure of the query
 
                 // Adding data to arraylist line by line.
                 while ((st2 = br2.readLine()) != null) {
@@ -668,6 +673,7 @@ public class TableProcessor {
         BufferedReader br = new BufferedReader(new FileReader(Utils.resourcePath+Utils.currentDbName+"/"+tableName+".tsv"));
         String line;
         String str = "";
+        br.readLine(); // you can ignore the first line as its the structure of the table
         br.readLine();
         ArrayList<Integer> index = new ArrayList<>();
         String[] columnNames = br.readLine().split("~");

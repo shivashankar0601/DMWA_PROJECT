@@ -121,10 +121,10 @@ public class LoginPage {
             FileWriter fileWriter = new FileWriter(path,true);
             fileWriter.append((credentials.size()>0?"\n":"")+sb.toString());
             fileWriter.close();
-            if(Utils.createDirectory(Utils.resourcePath,user))
-                System.out.println("User "+user+" created successfully");
-            else
-                throw new Exception("user directory creation error");
+//            if(Utils.createDirectory(Utils.resourcePath,user))
+            System.out.println("User "+user+" created successfully");
+//            else
+//                throw new Exception("user directory creation error");
         } catch (Exception e) {
             System.out.println(e.getLocalizedMessage());
         }
