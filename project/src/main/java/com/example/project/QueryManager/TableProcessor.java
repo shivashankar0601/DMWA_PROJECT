@@ -84,7 +84,9 @@ public class TableProcessor {
                 if (validateValues(tableName, columnCount, insertValues, isTransaction)) {
                     if (flag.equals("local") && !isTransaction) {
                         System.out.println("inserted successfully");
-                    } else {
+                    } else if(flag.equals("remote") && !isTransaction){
+                        return "success";
+                    }else {
                         return "inserted successfully";
                     }
                 }  else {
