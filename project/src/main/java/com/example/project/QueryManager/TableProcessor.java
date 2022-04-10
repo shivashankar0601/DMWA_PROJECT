@@ -13,6 +13,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import com.example.project.DistributedDatabaseLayer.Requester;
 
+import static java.lang.Thread.sleep;
+
 public class TableProcessor {
 
     private String path;
@@ -85,20 +87,37 @@ public class TableProcessor {
 
         if (tableName != null) {
             if (checkIfTableExists(tableName)) {
+                while(Utils.tableLocked.contains(tableName)) {
+                    try {
+                        System.out.println("Waiting for the lock to get released...");
+                        sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                Utils.tableLocked.add(tableName);
                 if (validateValues(tableName, columnCount, insertValues, isTransaction)) {
                     if (flag.equals("local") && !isTransaction) {
                         System.out.println("inserted successfully");
                     } else if(flag.equals("remote") && !isTransaction){
+                        if(Utils.tableLocked.contains(tableName))
+                            Utils.tableLocked.remove(tableName);
                         return "success";
-                    }else {
+                    } else {
+                        if(Utils.tableLocked.contains(tableName))
+                            Utils.tableLocked.remove(tableName);
                         return "inserted successfully";
                     }
                 }  else {
                     System.err.println("Column length is incorrect");
+                    if(Utils.tableLocked.contains(tableName))
+                        Utils.tableLocked.remove(tableName);
                     return "invalid";
                 }
             } else {
                 if (flag.equals("remote")) {
+                    if(Utils.tableLocked.contains(tableName))
+                        Utils.tableLocked.remove(tableName);
                     return "table does not exist";
                 } else {
                     Requester requester = Requester.getInstance();
@@ -107,6 +126,8 @@ public class TableProcessor {
                         requester.requestVMSetCurrentDbName(Utils.currentDbName);
                         String response = requester.requestVMInsertQuery(query.replaceAll(" ", "%20"), "remote", isTransaction);
                         if(response.equals("invalid")) {
+                            if(Utils.tableLocked.contains(tableName))
+                                Utils.tableLocked.remove(tableName);
                             return "invalid";
                         } else if(!response.equals("invalid") && response.equals("inserted successfully")){
                             Utils.transQueryList.add(query);
@@ -115,14 +136,20 @@ public class TableProcessor {
                         }
                     } else {
                         System.out.println("table does not exist");
+                        if(Utils.tableLocked.contains(tableName))
+                            Utils.tableLocked.remove(tableName);
                         return "invalid";
                     }
                 }
             }
         } else {
             System.err.println("query is incorrect");
+            if(Utils.tableLocked.contains(tableName))
+                Utils.tableLocked.remove(tableName);
             return "invalid";
         }
+        if(Utils.tableLocked.contains(tableName))
+            Utils.tableLocked.remove(tableName);
         return "";
     }
 
@@ -148,8 +175,10 @@ public class TableProcessor {
                 return false;
             }
         } catch (FileNotFoundException e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             System.err.println(Utils.dbMetadataNotFound);
         } catch (IOException e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             e.printStackTrace();
         }
         return false;
@@ -207,10 +236,13 @@ public class TableProcessor {
                         return true;
                 }
             }
-        } catch (FileNotFoundException e) {
-            System.err.println(Utils.dbMetadataNotFound);
+        } catch (FileNotFoundException e) {            
+            //System.err.println(Utils.dbMetadataNotFound);
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             // at least an empty metadata should be made available by the time application is created
+            return false;
         } catch (IOException e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             e.printStackTrace();
         }
         return false;
@@ -440,6 +472,7 @@ public class TableProcessor {
                     } else
                         return affectedRows+" rows affected";
                 } catch (Exception e) {
+                    logManager.writeCrashReportsToEventLogs(e.getMessage());
                     e.printStackTrace();
                 }
                 }
@@ -469,6 +502,7 @@ public class TableProcessor {
                 }
             }
         } catch(Exception e){
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             System.out.println("Exception: "+e);
             if(isTransaction){
                 return "invalid";
@@ -653,6 +687,7 @@ public class TableProcessor {
                         return affectedRows+" rows affected";
 
                 } catch (Exception e) {
+                    logManager.writeCrashReportsToEventLogs(e.getMessage());
                     e.printStackTrace();
                 }}
             } else {
@@ -681,6 +716,7 @@ public class TableProcessor {
                 }
             }
         } catch(Exception e){
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             System.out.println("Exception: "+e);
             if(isTransaction){
                 return "invalid";
@@ -779,6 +815,7 @@ public class TableProcessor {
 
             output = selectReadTable(tableName, columnNameList, columnDetails);
         } catch (IOException e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             e.printStackTrace();
         }
         System.out.println("output: \n" + output);

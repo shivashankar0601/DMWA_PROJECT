@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import com.example.project.LogManager.LogManager;
 import com.example.project.Utilities.Utils;
 
 // remaining items from login page
@@ -15,6 +16,8 @@ public class LoginPage {
 
     private UserCredentials currentUser = null;
 
+    LogManager logManager = new LogManager();
+
     public void loginMenu(){
         try {
             // loading all the configuration parameters needed from configuration.tsv
@@ -23,6 +26,7 @@ public class LoginPage {
                 System.out.println("configuration loaded successfully");
             }
             catch(Exception e){
+                logManager.writeCrashReportsToEventLogs(e.getMessage());
                 // if there was an error configuring the db, then there is no point in moving forward with those errors, so we exit
                 e.printStackTrace();
                 System.exit(1);
@@ -57,6 +61,7 @@ public class LoginPage {
             } while (option != 0);
         }
         catch (Exception e){
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             System.out.println(e.getLocalizedMessage());
         }
     }
@@ -74,8 +79,10 @@ public class LoginPage {
                 }
             }
         }catch (FileNotFoundException ex) {
+            logManager.writeCrashReportsToEventLogs(ex.getMessage());
             System.out.println(ex.getLocalizedMessage());
         } catch (IOException ex) {
+            logManager.writeCrashReportsToEventLogs(ex.getMessage());
             System.out.println(ex.getLocalizedMessage());
         }
         return credentials;
@@ -126,6 +133,7 @@ public class LoginPage {
 //            else
 //                throw new Exception("user directory creation error");
         } catch (Exception e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             System.out.println(e.getLocalizedMessage());
         }
     }
@@ -162,6 +170,7 @@ public class LoginPage {
                                         return;
                                 } catch (InterruptedException e) {
                                     //e.printStackTrace();
+                                    logManager.writeCrashReportsToEventLogs(e.getMessage());
                                 }
                                 continue;
                             }
@@ -184,6 +193,7 @@ public class LoginPage {
                         TimeUnit.SECONDS.sleep(1);
                     } catch (InterruptedException e) {
                         //e.printStackTrace();
+                        logManager.writeCrashReportsToEventLogs(e.getMessage());
                     }
                 }
 

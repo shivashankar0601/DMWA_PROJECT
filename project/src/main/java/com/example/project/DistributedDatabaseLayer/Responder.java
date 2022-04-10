@@ -1,6 +1,7 @@
 package com.example.project.DistributedDatabaseLayer;
 
 import com.example.project.DataExport.ExportEngine;
+import com.example.project.DataModeling.DataModelingEngine;
 import com.example.project.QueryManager.DatabaseProcessor;
 import com.example.project.QueryManager.TableProcessor;
 import com.example.project.Utilities.Utils;
@@ -60,7 +61,6 @@ public class Responder {
         return TableProcessor.updateQuery(query, flag, isTransaction);
     }
 
-
     @RequestMapping(value = "/query", params = "delete", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public String performDeleteQuery(@RequestParam(value = "delete", defaultValue = "") String query, @RequestParam(value = "flag", defaultValue = "") String flag, @RequestParam(value = "isTransaction", defaultValue = "") Boolean isTransaction) {
         return TableProcessor.deleteQuery(query, flag, isTransaction);
@@ -71,16 +71,19 @@ public class Responder {
         return TableProcessor.selectQuery(query, flag);
     }
 
-
-
     @RequestMapping(value = "/tables", params = "db", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public String getAllTablesFromDB(@RequestParam(value = "db", defaultValue = "") String dbName, @RequestParam(value = "vm", defaultValue = "") boolean shouldRequestVM) {
         return ExportEngine.getAllAvailableTables(dbName, shouldRequestVM);
     }
+
     @RequestMapping(value = "/readTable", params = "table", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public String getWholeTableContent(@RequestParam(value = "table", defaultValue = "") String tableName, @RequestParam(value = "db", defaultValue = "") String dbName){
-        return StringUtils.join(Arrays.asList(ExportEngine.readTableData(tableName,dbName)),Utils.delimiter.charAt(0));
+    public String getWholeTableContent(@RequestParam(value = "table", defaultValue = "") String tableName, @RequestParam(value = "db", defaultValue = "") String dbName) {
+        return StringUtils.join(Arrays.asList(ExportEngine.readTableData(tableName, dbName)), Utils.delimiter.charAt(0));
     }
 
+    @RequestMapping(value = "/readStructure", params = "table", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public String getTableStructure(@RequestParam(value = "table", defaultValue = "") String tableName, @RequestParam(value = "db", defaultValue = "") String dbName) {
+        return DataModelingEngine.getTableStructure(tableName, dbName);
+    }
 
 }

@@ -27,7 +27,10 @@ public class QueryProcessor {
                 System.out.print("Query : ");
                 String query = input.readLine();
                 // log the query and current timestamp
-                logManager.writeQueryLog(query, this.user.getUsername());
+                logManager.writeQueryLog(query, this.user.getName());
+                long startTime = System.currentTimeMillis();
+                long stopTime = 0;
+                String diff = "";
                 switch (queryParser(query)) {
                     case 0: // for both create and use database queries, we should return zero from query processor
                         DatabaseProcessor dbp = new DatabaseProcessor();
@@ -35,6 +38,9 @@ public class QueryProcessor {
                         if (response != null || response != "") {
                             Utils.currentDbName = response;
                         }
+                        stopTime = System.currentTimeMillis();
+                        diff = (stopTime - startTime) + "";
+                        logManager.writeGeneralLog(diff, this.user.getName());
                         break;
                     case 1: // any query related to tables goes here
                         TableProcessor tp = new TableProcessor(path);
@@ -43,6 +49,9 @@ public class QueryProcessor {
                         } else {
                             System.err.println("No database used.");
                         }
+                        stopTime = System.currentTimeMillis();
+                        diff = (stopTime - startTime) + "";
+                        logManager.writeGeneralLog(diff, this.user.getName());
                         break;
                     default:
                         break;
@@ -86,6 +95,7 @@ public class QueryProcessor {
                 }
             } while (option != 0);
         } catch (IOException e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             System.out.println(e.getLocalizedMessage());
         }
     }
