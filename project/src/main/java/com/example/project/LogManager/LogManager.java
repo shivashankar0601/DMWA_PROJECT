@@ -1,10 +1,12 @@
 package com.example.project.LogManager;
 
+import com.example.project.DataExport.ExportEngine;
 import com.example.project.Utilities.Utils;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.List;
 
 public class LogManager {
     // save the log file path for general logs, event logs and query logs
@@ -12,33 +14,50 @@ public class LogManager {
     private String eventLogPath = Utils.resourcePath + "Logs/eventLogs";
     private String queryLogPath = Utils.resourcePath + "Logs/queryLogs";
 
-    // save query execution time and state of the database to generalLogPath file
-    public void writeGeneralLog(String queryExecutionTime, String databaseState) throws IOException {
+    ExportEngine engine = new ExportEngine(null, null, null);
+
+    public int getNumberOfTables(List<String> availableDatabases) {
+        int count = 0;
+        for (String database : availableDatabases) {
+            String allAvailableTables = engine.getAllAvailableTables(database, true);
+            count += allAvailableTables.split("~").length;
+        }
+        return count;
+    }
+
+    public void writeGeneralLog(String queryExecutionTime, String userName) throws IOException {
         // write to generalLogPath file
         FileWriter fw = null;
         BufferedWriter bw = null;
         PrintWriter pw = null;
+
+        List<String> availableDatabases = engine.getAllAvailableDBs();
+
+        int numberOfTables = getNumberOfTables(availableDatabases);
+        String databaseState = "numberOfDatabases:" + availableDatabases.size() + "~" + "numberOfTables:" + numberOfTables;
+
         try {
             File file = new File(generalLogPath + ".tsv");
             if (file.exists()) {
                 fw = new FileWriter(generalLogPath + ".tsv", true);
                 bw = new BufferedWriter(fw);
                 pw = new PrintWriter(bw);
-                pw.println(queryExecutionTime + " " + databaseState);
                 pw.print("queryExecutionTime:" + queryExecutionTime + "~"
                         + "databaseState:" + databaseState + "~"
+                        + "userName:" + userName + "~"
                         + "deviceName:" + Utils.currentDevice + "~"
-                        + "time:" + (new SimpleDateFormat("dd/MM/yyyy_HH:mm:ss").format(Calendar.getInstance().getTime())));
+                        + "time:" + (new SimpleDateFormat("dd/MM/yyyy_HH:mm:ss").format(Calendar.getInstance().getTime()))
+                        + "\n");
             } else {
                 fw = new FileWriter(generalLogPath + ".tsv");
                 bw = new BufferedWriter(fw);
                 pw = new PrintWriter(bw);
-                pw.println("queryExecutionTime" + "\t" + "databaseState");
-                pw.println(queryExecutionTime + "\t" + databaseState);
                 pw.print("queryExecutionTime:" + queryExecutionTime + "~"
                         + "databaseState:" + databaseState + "~"
+                        + "userName:" + userName + "~"
                         + "deviceName:" + Utils.currentDevice + "~"
-                        + "time:" + (new SimpleDateFormat("dd/MM/yyyy_HH:mm:ss").format(Calendar.getInstance().getTime())));
+                        + "time:" + (new SimpleDateFormat("dd/MM/yyyy_HH:mm:ss").format(Calendar.getInstance().getTime()))
+                        + "\n");
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -49,7 +68,6 @@ public class LogManager {
         }
     }
 
-    // save changes in database, concurrent transactions, crash reports and other events to eventLogPath file
     public void writeEventLog(String queryType, String tableName) {
         FileWriter fw = null;
         BufferedWriter bw = null;
@@ -81,16 +99,12 @@ public class LogManager {
                     pw.close();
                 }
             }
-
-
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    // save user queries and timestamp of query submission to queryLogPath file
     public void writeQueryLog(String query, String userName) {
-        // write to queryLogPath file
         FileWriter fw = null;
         BufferedWriter bw = null;
         PrintWriter pw = null;
@@ -129,8 +143,5 @@ public class LogManager {
             e.printStackTrace();
         }
     }
-
-    // implement function to create if file not exists
-
 
 }
