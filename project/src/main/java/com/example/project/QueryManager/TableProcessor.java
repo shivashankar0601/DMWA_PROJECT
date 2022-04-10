@@ -102,7 +102,9 @@ public class TableProcessor {
                         String response = requester.requestVMInsertQuery(query.replaceAll(" ", "%20"), "remote", isTransaction);
                         if(response.equals("invalid")) {
                             return "invalid";
-                        } else {
+                        } else if(!response.equals("invalid") && response.equals("inserted successfully")){
+                            Utils.transQueryList.add(query);
+                        }else {
                             System.out.println(response);
                         }
                     } else {
@@ -327,6 +329,7 @@ public class TableProcessor {
                 }
                 if(isTransaction){
                     Utils.transQueryList.add(query);
+                    return "deleted successfully";
                 } else {
                 //  Writing to a file
                 try {
@@ -381,6 +384,8 @@ public class TableProcessor {
                         System.out.println(response);
                         if(response.equals("invalid")){
                             return "invalid";
+                        } else if(!response.equals("invalid") && response.equals("deleted successfully")){
+                            Utils.transQueryList.add(query);
                         }
                         return response;
                     } else {
@@ -502,6 +507,7 @@ public class TableProcessor {
 
                 if(isTransaction){
                     Utils.transQueryList.add(query);
+                    return "updated successfully";
                 } else {
                 //  Writing to a file
                 try {
@@ -552,6 +558,8 @@ public class TableProcessor {
                         System.out.println(response);
                         if(response.equals("invalid")){
                             return "invalid";
+                        } else if(!response.equals("invalid") && response.equals("updated successfully")){
+                            Utils.transQueryList.add(query);
                         }
                         return response;
                     } else {
