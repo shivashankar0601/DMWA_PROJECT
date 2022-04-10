@@ -53,14 +53,14 @@ public class Responder {
     }
 
     @RequestMapping(value = "/query", params = "update", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public String performUpdateQuery(@RequestParam(value = "update", defaultValue = "") String query, @RequestParam(value = "flag", defaultValue = "") String flag) {
-        return TableProcessor.updateQuery(query, flag);
+    public String performUpdateQuery(@RequestParam(value = "update", defaultValue = "") String query, @RequestParam(value = "flag", defaultValue = "") String flag, @RequestParam(value = "isTransaction", defaultValue = "") Boolean isTransaction) {
+        return TableProcessor.updateQuery(query, flag, isTransaction);
     }
 
 
     @RequestMapping(value = "/query", params = "delete", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public String performDeleteQuery(@RequestParam(value = "delete", defaultValue = "") String query, @RequestParam(value = "flag", defaultValue = "") String flag) {
-        return TableProcessor.deleteQuery(query, flag);
+    public String performDeleteQuery(@RequestParam(value = "delete", defaultValue = "") String query, @RequestParam(value = "flag", defaultValue = "") String flag, @RequestParam(value = "isTransaction", defaultValue = "") Boolean isTransaction) {
+        return TableProcessor.deleteQuery(query, flag, isTransaction);
     }
 
     @RequestMapping(value = "/query", params = "select", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)

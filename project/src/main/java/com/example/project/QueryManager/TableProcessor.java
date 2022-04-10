@@ -27,7 +27,8 @@ public class TableProcessor {
         String insertIntoRegx = "(insert\\sinto\\s[)(0-9a-zA-Z_\\s,'\"]+)[;]?"; //check if the insert query is in correct format
         String createTableRegx = "^(create\\stable\\s[)(0-9a-zA-Z_\\s,]+)[;]?$";
         String selectTableReg = "^((select)\\s([*]?|[0-9a-zA-Z_ ,]+)\\s(from)\\s([0-9a-zA-Z _'=]+)(\\s(where)\\s([0-9a-zA-Z _'\\\\\"=]+))?)[;]?$";
-
+        String updateTableRegx = "^(update\\s[a-zA-Z][0-9A-Za-z_]+\\sset\\s[a-zA-Z0-9\\\"'\\s$&+,:;=?@#|'<>.^()%!-]+\\swhere\\s[a-zA-Z0-9\\\"'\\s]+=[a-zA-Z0-9\\\"'\\s_|!@#$%^&*)(-.,:]+)[;]?$";
+        String deleteTableRegx = "^(delete from\\s[a-zA-Z][0-9A-Za-z_]+\\swhere\\s[a-zA-Z][a-zA-Z0-9]+=[a-zA-Z0-9\\s_\\\"\\'\\-$#@!]+)[;]?$";
         String flag = "";
         if (Utils.isVMRequest) {
             flag = "remote";
@@ -44,11 +45,17 @@ public class TableProcessor {
         else if (query.matches(createTableRegx)) {
             createTableQuery(query);
         }
-        else if(query.contains("update")) {
-            updateQuery(query,flag);
+        else if(query.matches(updateTableRegx)) {
+            String isValid=updateQuery(query,flag,isTransaction);
+            if(isValid.equals("invalid")) {
+                return false;
+            }
         }
-        else if(query.contains("delete")) {
-            deleteQuery(query,flag);
+        else if(query.matches(deleteTableRegx)) {
+            String isValid=deleteQuery(query,flag,isTransaction);
+            if(isValid.equals("invalid")) {
+                return false;
+            }
         }
         else if (query.matches(selectTableReg)) {
             selectQuery(query,flag);
@@ -232,7 +239,7 @@ public class TableProcessor {
         }
     }
 
-    public static String deleteQuery(String query, String flag) {
+    public static String deleteQuery(String query, String flag, Boolean isTransaction) {
         try {
             query = query.replaceAll("%20", " ");
             String[] deleteQueryArray = query.split(" ");
@@ -318,7 +325,9 @@ public class TableProcessor {
                         affectedRows++;
                     }
                 }
-
+                if(isTransaction){
+                    Utils.transQueryList.add(query);
+                } else {
                 //  Writing to a file
                 try {
                     FileWriter file = new FileWriter(Utils.resourcePath+Utils.currentDbName+"/"+queryTableName.toLowerCase()+".tsv", false);
@@ -358,6 +367,7 @@ public class TableProcessor {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                }
             } else {
                 if(flag.equals("remote")){
                     return "Table '" + queryTableName + "' does not exist in " + Utils.currentDbName;
@@ -367,22 +377,31 @@ public class TableProcessor {
                     String vmList = requester.requestVMDBCheck(Utils.currentDbName);
                     if (vmList.split("~").length > 1 || !vmList.equals(Utils.currentDevice)) {
                         requester.requestVMSetCurrentDbName(Utils.currentDbName);
-                        String response = requester.requestVMDeleteQuery(query.replaceAll(" ", "%20"), "remote");
+                        String response = requester.requestVMDeleteQuery(query.replaceAll(" ", "%20"), "remote", isTransaction);
                         System.out.println(response);
+                        if(isTransaction){
+                            return "invalid";
+                        }
                         return response;
                     } else {
+                        if(isTransaction){
+                            return "invalid";
+                        }
                         System.out.println("Table does not exist");
                     }
                 }
             }
         } catch(Exception e){
             System.out.println("Exception: "+e);
+            if(isTransaction){
+                return "invalid";
+            }
             return "Exception: "+e;
         }
         return "";
     }
 
-    public static String updateQuery(String query, String flag) {
+    public static String updateQuery(String query, String flag, Boolean isTransaction) {
         try {
             query = query.replaceAll("%20", " ");
             String[] updateQueryArray = query.split(" ");
@@ -481,6 +500,9 @@ public class TableProcessor {
                     }
                 }
 
+                if(isTransaction){
+                    Utils.transQueryList.add(query);
+                } else {
                 //  Writing to a file
                 try {
                     FileWriter file = new FileWriter(Utils.resourcePath+Utils.currentDbName+"/"+queryTableName.toLowerCase()+".tsv", false);
@@ -519,7 +541,7 @@ public class TableProcessor {
 
                 } catch (Exception e) {
                     e.printStackTrace();
-                }
+                }}
             } else {
                 if(flag.equals("remote")){
                     return "Table '" + queryTableName + "' does not exist in " + Utils.currentDbName;
@@ -529,16 +551,25 @@ public class TableProcessor {
                     String vmList = requester.requestVMDBCheck(Utils.currentDbName);
                     if (vmList.split("~").length > 1 || !vmList.equals(Utils.currentDevice)) {
                         requester.requestVMSetCurrentDbName(Utils.currentDbName);
-                        String response = requester.requestVMUpdateQuery(query.replaceAll(" ", "%20"), "remote");
+                        String response = requester.requestVMUpdateQuery(query.replaceAll(" ", "%20"), "remote", isTransaction);
                         System.out.println(response);
+                        if(isTransaction){
+                            return "invalid";
+                        }
                         return response;
                     } else {
+                        if(isTransaction){
+                            return "invalid";
+                        }
                         System.out.println("Table does not exist");
                     }
                 }
             }
         } catch(Exception e){
             System.out.println("Exception: "+e);
+            if(isTransaction){
+                return "invalid";
+            }
             return "Exception: "+e;
         }
         return "";
