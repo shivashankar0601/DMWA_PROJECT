@@ -78,7 +78,7 @@ public class Responder {
         return ExportEngine.getAllAvailableTables(dbName, shouldRequestVM);
     }
     @RequestMapping(value = "/readTable", params = "table", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public String getWholeTablecontent(String tableName, String dbName){
+    public String getWholeTableContent(@RequestParam(value = "table", defaultValue = "") String tableName, @RequestParam(value = "db", defaultValue = "") String dbName){
         return StringUtils.join(Arrays.asList(ExportEngine.readTableData(tableName,dbName)),Utils.delimiter.charAt(0));
     }
 

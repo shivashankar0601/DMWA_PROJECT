@@ -68,7 +68,7 @@ public class ExportEngine {
 
                         if(createExportFile(Arrays.asList(tables.split(Utils.delimiter)), ipt.trim())){
                             File cPath = new File(".");
-                            System.out.println(cPath.getCanonicalPath());
+//                            System.out.println(cPath.getCanonicalPath());
                             System.out.println(ipt.trim() + " Database exported successfully to "+cPath.getCanonicalPath()+"\\"+ipt.trim()+"_exported_data.sql");
                         }
                         else{
@@ -177,29 +177,29 @@ public class ExportEngine {
 
         return data;
     }
+//
+//    public String prepareKeys(String[] split, int cols) {
+//        return "";
+//    }
 
-    public String prepareKeys(String[] split, int cols) {
-        return "";
-    }
 
-
-    public String prepareColumns(String[] cols, int count) {
-        StringBuilder sb = new StringBuilder();
-        int i = count;
-        // we extract only those many number of columns, we will not worry about primary key and foreign key stuff
-        for(String col : cols){
-            if(i-- == 0)
-                break;
-            String info [] = col.split(" ");
-            if(info.length==3){
-                sb.append(col.replace(info[2],"("+info[2]+"), "));
-            }
-            else{
-                sb.append(col+", ");
-            }
-        }
-        return sb.toString().substring(0,sb.length()-2);
-    }
+//    public String prepareColumns(String[] cols, int count) {
+//        StringBuilder sb = new StringBuilder();
+//        int i = count;
+//        // we extract only those many number of columns, we will not worry about primary key and foreign key stuff
+//        for(String col : cols){
+//            if(i-- == 0)
+//                break;
+//            String info [] = col.split(" ");
+//            if(info.length==3){
+//                sb.append(col.replace(info[2],"("+info[2]+"), "));
+//            }
+//            else{
+//                sb.append(col+", ");
+//            }
+//        }
+//        return sb.toString().substring(0,sb.length()-2);
+//    }
 
     public static String getAllAvailableTables(String dbName, boolean shouldRequestVM) {
         ArrayList<String> tables = new ArrayList<String>();
