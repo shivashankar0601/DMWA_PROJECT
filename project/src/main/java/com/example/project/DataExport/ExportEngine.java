@@ -12,6 +12,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static com.example.project.QueryManager.DatabaseProcessor.checkIsLocalDB;
+
 public class ExportEngine {
     private UserCredentials user = null;
     private BufferedReader input = null;
@@ -65,7 +67,14 @@ public class ExportEngine {
                     }
                     else{
                         // perform the data export operation
-                        System.out.println(ipt.trim() + " Database exported successfully to {some path}");
+
+                        if(createExportFile(Arrays.asList(tables.split(Utils.delimiter)), ipt.trim())){
+                            System.out.println(ipt.trim() + " Database exported successfully to {some path}");
+                        }
+                        else{
+                            System.err.println(ipt.trim() + " Database export failed");
+                        }
+
                     }
 
                 } else {
@@ -83,11 +92,80 @@ public class ExportEngine {
 
     }
 
-    private boolean createExportFile(List<String> tables) {
+    private boolean createExportFile(List<String> tables, String dbName) {
         boolean status = false;
-        //FileWriter export = new FileWriter(dbName + "_exported_data.sql");
+        try {
+            FileWriter export = new FileWriter(dbName + "_exported_data.sql");
+
+            for(String table : tables){
+                String [] data = readTableData(table, dbName);
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         return status;
+    }
+
+    private String[] readTableData(String table, String dbName) {
+        String [] data = new String[2]; // create statement and the data in one line
+        String keys = "";
+
+        if(DatabaseProcessor.checkIsLocalDB(dbName)){
+            try {
+                BufferedReader br = new BufferedReader(new FileReader(Utils.resourcePath + dbName));
+                // for create query
+                int cols = Integer.parseInt(br.readLine().split(Utils.delimiter)[1]);
+                String columns = prepareColumns(br.readLine().split(Utils.delimiter), cols);
+
+
+
+                data[0] = String.format("create table %s ( %s ) %s;",table,columns,keys);
+                String line = null;
+                // for all values
+                while((line=br.readLine())!=null){
+
+                }
+            }
+            catch(Exception e){
+
+            }
+        }
+
+
+
+        return data;
+    }
+
+
+    public String prepareColumns(String[] cols, int count) {
+        StringBuilder sb = new StringBuilder();
+        int i = count;
+        // we extract only those many number of columns, we will not worry about primary key and foreign key stuff
+        for(String col : cols){
+            if(i-- == 0)
+                break;
+            String info [] = col.split(" ");
+            if(info.length==3){
+                sb.append(col.replace(info[2],"("+info[2]+"), "));
+            }
+            else{
+                sb.append(col+", ");
+            }
+        }
+        return sb.toString().substring(0,sb.length()-2);
     }
 
     public static String getAllAvailableTables(String dbName, boolean shouldRequestVM) {

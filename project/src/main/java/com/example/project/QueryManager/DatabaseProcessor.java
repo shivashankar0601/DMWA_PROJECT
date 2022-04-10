@@ -62,16 +62,24 @@ public class DatabaseProcessor {
                 return true;
             }
         } else {
-            File f = new File(Utils.resourcePath + dbName);
-            if (f.exists()) {
-                Utils.isVMRequest = false;
+
+            if(checkIsLocalDB(dbName))
                 return true;
-            }
+
             String res = Requester.getInstance().requestVMDBCheck(dbName);
             if (res != null && res.length() > 0) {
                 Utils.isVMRequest = true;
                 return true;
             }
+        }
+        return false;
+    }
+
+    public static boolean checkIsLocalDB(String dbName){
+        File f = new File(Utils.resourcePath + dbName);
+        if (f.exists()) {
+            Utils.isVMRequest = false;
+            return true;
         }
         return false;
     }
