@@ -33,7 +33,7 @@ public class fetchAnalysis {
     private void countQueries(String query) {
         try{
             BufferedReader br3 = new BufferedReader(
-                    new FileReader(Utils.resourcePath + "queryLogs.tsv"));
+                    new FileReader(Utils.resourcePath + "Logs/queryLogs.tsv"));
             ArrayList<String> queryLogs = new ArrayList<String>();
             String st3 = "";
 
@@ -66,7 +66,7 @@ public class fetchAnalysis {
                 } else
                     str2=checkIfExistsInStr(str2, str.get(i));
             }
-            FileWriter fw1=new FileWriter(Utils.resourcePath+"countQueries.tsv", false);
+            FileWriter fw1=new FileWriter(Utils.resourcePath+"/countQueries.tsv", false);
             BufferedWriter bw1 = new BufferedWriter(fw1);
             PrintWriter out1 = new PrintWriter(bw1);
             for(int i=0;i< str2.size();i++){
