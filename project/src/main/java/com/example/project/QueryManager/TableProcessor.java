@@ -175,8 +175,10 @@ public class TableProcessor {
                 return false;
             }
         } catch (FileNotFoundException e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             System.err.println(Utils.dbMetadataNotFound);
         } catch (IOException e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             e.printStackTrace();
         }
         return false;
@@ -234,11 +236,13 @@ public class TableProcessor {
                         return true;
                 }
             }
-        } catch (FileNotFoundException e) {
-            return false;
+        } catch (FileNotFoundException e) {            
             //System.err.println(Utils.dbMetadataNotFound);
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             // at least an empty metadata should be made available by the time application is created
+            return false;
         } catch (IOException e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             e.printStackTrace();
         }
         return false;
@@ -468,6 +472,7 @@ public class TableProcessor {
                     } else
                         return affectedRows+" rows affected";
                 } catch (Exception e) {
+                    logManager.writeCrashReportsToEventLogs(e.getMessage());
                     e.printStackTrace();
                 }
                 }
@@ -497,6 +502,7 @@ public class TableProcessor {
                 }
             }
         } catch(Exception e){
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             System.out.println("Exception: "+e);
             if(isTransaction){
                 return "invalid";
@@ -681,6 +687,7 @@ public class TableProcessor {
                         return affectedRows+" rows affected";
 
                 } catch (Exception e) {
+                    logManager.writeCrashReportsToEventLogs(e.getMessage());
                     e.printStackTrace();
                 }}
             } else {
@@ -709,6 +716,7 @@ public class TableProcessor {
                 }
             }
         } catch(Exception e){
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             System.out.println("Exception: "+e);
             if(isTransaction){
                 return "invalid";
@@ -807,6 +815,7 @@ public class TableProcessor {
 
             output = selectReadTable(tableName, columnNameList, columnDetails);
         } catch (IOException e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             e.printStackTrace();
         }
         System.out.println("output: \n" + output);

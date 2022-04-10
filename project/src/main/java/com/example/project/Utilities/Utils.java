@@ -5,6 +5,8 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 
+import com.example.project.LogManager.LogManager;
+
 public class Utils {
 
     public static String currentDevice = null;
@@ -18,6 +20,8 @@ public class Utils {
     // just defined for future use
     public static boolean debugging = false;
     public static boolean isVMRequest = false;
+
+    static LogManager logManager = new LogManager();
 
     // Error messages which are commonly used
     public static String gddNotFound = "Global Data Dictionary is not found";
@@ -36,6 +40,7 @@ public class Utils {
             }
             return final_value;
         } catch (Exception e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             //System.out.println(e.getLocalizedMessage());;
             e.printStackTrace();
         }
@@ -48,6 +53,7 @@ public class Utils {
             f.mkdir();
             return true;
         } catch (Exception e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             e.printStackTrace();
         }
         return false;
@@ -59,6 +65,7 @@ public class Utils {
             f.createNewFile();
             return true;
         } catch (Exception e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             e.printStackTrace();
         }
         return false;
@@ -111,6 +118,7 @@ public class Utils {
             }
         }
         catch(Exception e){
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             System.err.println(e.getLocalizedMessage());
             return false;
         }

@@ -3,6 +3,7 @@ package com.example.project.UIAndSecurity;
 import com.example.project.Analytics.AnalysisEngine;
 import com.example.project.DataExport.ExportEngine;
 import com.example.project.DataModeling.DataModelingEngine;
+import com.example.project.LogManager.LogManager;
 import com.example.project.QueryManager.QueryProcessor;
 import com.example.project.Utilities.Utils;
 
@@ -14,6 +15,8 @@ public class Menu {
     private BufferedReader input = null;
     private UserCredentials currentUser = null;
     private String path = null;
+
+    LogManager logManager = new LogManager();
 
     public Menu(BufferedReader input, UserCredentials currentUser, String path) {
         this.input = input;
@@ -33,6 +36,8 @@ public class Menu {
                 try {
                     option = Integer.parseInt(input.readLine());
                 } catch (Exception e) {
+                    logManager.writeCrashReportsToEventLogs(e.getMessage());
+                    logManager.writeCrashReportsToEventLogs(e.getMessage());
                     System.err.println("wrong input received, try again");
                     try {
                         TimeUnit.SECONDS.sleep(1);
@@ -70,6 +75,7 @@ public class Menu {
                 }
 
             } catch (Exception e) {
+                logManager.writeCrashReportsToEventLogs(e.getMessage());
                 System.out.println(e.getLocalizedMessage());
             }
 

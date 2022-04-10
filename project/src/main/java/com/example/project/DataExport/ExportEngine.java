@@ -1,6 +1,7 @@
 package com.example.project.DataExport;
 
 import com.example.project.DistributedDatabaseLayer.Requester;
+import com.example.project.LogManager.LogManager;
 import com.example.project.QueryManager.DatabaseProcessor;
 import com.example.project.UIAndSecurity.UserCredentials;
 import com.example.project.Utilities.Utils;
@@ -16,6 +17,8 @@ public class ExportEngine {
     private UserCredentials user = null;
     private BufferedReader input = null;
     private String path = null;
+
+    static LogManager logManager = new LogManager();
 
     public ExportEngine(BufferedReader input, UserCredentials currentUser, String path) {
         this.user = currentUser;
@@ -53,7 +56,7 @@ public class ExportEngine {
                 if (dbs.contains(ipt.trim())) {
 
                     String tables = getAllAvailableTables(ipt, true);
-                    if(tables==null || tables.length()==0){
+                    if (tables == null || tables.length() == 0) {
                         // which means no tables in the db, what should i do
                         System.err.println("no tables in the database to export");
                         try {
@@ -61,18 +64,18 @@ public class ExportEngine {
                             break;
                         } catch (InterruptedException e) {
                             //e.printStackTrace();
+                            logManager.writeCrashReportsToEventLogs(e.getMessage());
                         }
-                    }
-                    else{
+                    } else {
                         // perform the data export operation
 
-                        if(createExportFile(Arrays.asList(tables.split(Utils.delimiter)), ipt.trim())){
+                        if (createExportFile(Arrays.asList(tables.split(Utils.delimiter)), ipt.trim())) {
                             File cPath = new File(".");
 //                            System.out.println(cPath.getCanonicalPath());
-                            System.out.println(ipt.trim() + " Database exported successfully to "+cPath.getCanonicalPath()+"\\"+ipt.trim()+"_exported_data.sql");
-                        }
-                        else{
-                            System.err.println(ipt.trim() + " Database export failed");
+                            System.out.println(ipt.trim() + " Database exported successfully to " + cPath.getCanonicalPath() + "\\" + ipt.trim() + "_exported_data.sql");
+                        } else {
+                            // should write to logs that there was an error
+                            System.err.println(ipt.trim() + " Database export failed, for more information on the problem check logs");
                         }
 
                     }
@@ -86,6 +89,7 @@ public class ExportEngine {
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             e.printStackTrace();
         }
 
@@ -97,10 +101,10 @@ public class ExportEngine {
         try {
             FileWriter export = new FileWriter(dbName + "_exported_data.sql");
 
-            for(String table : tables){
-                String [] data = readTableData(table, dbName);
-                export.append(data[0]+"\n");
-                export.append(data[1]+"\n");
+            for (String table : tables) {
+                String[] data = readTableData(table, dbName);
+                export.append(data[0] + "\n");
+                export.append(data[1] + "\n");
             }
 
             export.flush();
@@ -108,48 +112,43 @@ public class ExportEngine {
             status = true;
 
         } catch (IOException e) {
+            logManager.writeCrashReportsToEventLogs(e.getMessage());
             e.printStackTrace();
-            status=false;
+            status = false;
         }
 
         return status;
     }
 
     public static String[] readTableData(String table, String dbName) {
-        String [] data = new String[2]; // create statement and the data in one line
+        String[] data = new String[2]; // create statement and the data in one line
 
-        if(DatabaseProcessor.checkIsLocalDB(dbName) && isLocalTable(table,dbName)){
+        if (DatabaseProcessor.checkIsLocalDB(dbName) && isLocalTable(table, dbName)) {
             try {
-                String path = Utils.resourcePath + dbName+"/"+table+".tsv";
+                String path = Utils.resourcePath + dbName + "/" + table + ".tsv";
                 BufferedReader br = new BufferedReader(new FileReader(path));
                 // for create query
 
                 data[0] = br.readLine(); // check with others if they are ok with this
 
-//                int cols = Integer.parseInt(br.readLine().split(Utils.delimiter)[1]);
-//
-//                String line = br.readLine();
-//                String keys = "";
-//                if(line.toLowerCase().contains("primary key") || line.toLowerCase().contains("foreign key"))
-//                    keys = prepareKeys(line.split(Utils.delimiter),cols);
-//                String columns = prepareColumns(line.split(Utils.delimiter), cols);
-//
-//                data[0] = String.format("create table %s ( %s ) %s;",table,columns,keys);
                 br.readLine();
                 br.readLine();
                 String line = null;
                 // for all values
                 StringBuilder sb = new StringBuilder();
-                sb.append("insert into "+table+" values ");
-                while((line=br.readLine())!=null){
+
+
+                sb.append("insert into " + table + " values ");
+                while ((line = br.readLine()) != null) {
                     sb.append("(");
-                    if(line.contains(Utils.delimiter)) {
+                    if (line.contains(Utils.delimiter)) {
 
                         String splits[] = line.split("~");
                         for (int i = 0; i < splits.length; i++) {
                             try {
                                 sb.append(Integer.parseInt(splits[i]));
                             } catch (Exception e) {
+                                logManager.writeCrashReportsToEventLogs(e.getMessage());
                                 if (!splits[i].contains("'"))
                                     sb.append("'" + splits[i] + "'");
                                 else
@@ -158,19 +157,17 @@ public class ExportEngine {
                             if (i != splits.length - 1)
                                 sb.append(",");
                         }
-                    }
-                    else{
+                    } else {
                         sb.append(line);
                     }
                     sb.append("),");
                 }
-                data[1]=sb.toString().substring(0,sb.length()-1)+";";
+                // when there is no data in the tables, i mean no rows in the table (empty table)
+                data[1] = sb.toString().equalsIgnoreCase("insert into " + table + " values ") ? "" : sb.toString().substring(0, sb.length() - 1) + ";";
+            } catch (Exception e) {
+                logManager.writeCrashReportsToEventLogs(e.getMessage());
             }
-            catch(Exception e){
-
-            }
-        }
-        else{
+        } else {
             data = Requester.getInstance().requestVMWholeTable(table, dbName);
         }
 
@@ -178,36 +175,13 @@ public class ExportEngine {
         return data;
     }
 
-    private static boolean isLocalTable(String table, String dbName) {
+    public static boolean isLocalTable(String table, String dbName) {
         boolean res = false;
-        File file = new File(Utils.resourcePath+dbName+"/"+table+".tsv");
-        if(file.exists())
-            res=true;
+        File file = new File(Utils.resourcePath + dbName + "/" + table + ".tsv");
+        if (file.exists())
+            res = true;
         return res;
     }
-//
-//    public String prepareKeys(String[] split, int cols) {
-//        return "";
-//    }
-
-
-//    public String prepareColumns(String[] cols, int count) {
-//        StringBuilder sb = new StringBuilder();
-//        int i = count;
-//        // we extract only those many number of columns, we will not worry about primary key and foreign key stuff
-//        for(String col : cols){
-//            if(i-- == 0)
-//                break;
-//            String info [] = col.split(" ");
-//            if(info.length==3){
-//                sb.append(col.replace(info[2],"("+info[2]+"), "));
-//            }
-//            else{
-//                sb.append(col+", ");
-//            }
-//        }
-//        return sb.toString().substring(0,sb.length()-2);
-//    }
 
     public static String getAllAvailableTables(String dbName, boolean shouldRequestVM) {
         ArrayList<String> tables = new ArrayList<String>();
@@ -220,22 +194,22 @@ public class ExportEngine {
             File tbls[] = f.listFiles();
             for (File table : tbls) {
                 String tname = table.getName();
-                tname = tname.substring(0,tname.indexOf(".tsv"));
-                if(tname.equalsIgnoreCase("metadata"))
+                tname = tname.substring(0, tname.indexOf(".tsv"));
+                if (tname.equalsIgnoreCase("metadata"))
                     continue;
                 tables.add(tname);
                 //System.out.println(tname);
             }
         }
 
-        String response = StringUtils.join(tables,Utils.delimiter.charAt(0));
+        String response = StringUtils.join(tables, Utils.delimiter.charAt(0));
 
-        if(shouldRequestVM){
+        if (shouldRequestVM) {
             // ask vm to give the tables available over there
-            String res = Requester.getInstance().requestVMAllTables(dbName,!shouldRequestVM);
+            String res = Requester.getInstance().requestVMAllTables(dbName, !shouldRequestVM);
             // returning empty string from server is causing null pointer exception in html response so returning none
-            if(res!=null && res.length()>0) {
-                response = response.length()>0? response.concat(Utils.delimiter+res):res;
+            if (res != null && res.length() > 0) {
+                response = response.length() > 0 ? response.concat(Utils.delimiter + res) : res;
                 return response;
             }
         }
@@ -260,6 +234,7 @@ public class ExportEngine {
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {
+                logManager.writeCrashReportsToEventLogs(e.getMessage());
                 e.printStackTrace();
             }
             return dbs;
