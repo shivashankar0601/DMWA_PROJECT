@@ -254,15 +254,6 @@ public class TableProcessor {
             // Variable for conditions after where Clause
             String[] condition = afterWhere.replace("\"","").replace("'","").split("=");
 
-            BufferedReader br = new BufferedReader(
-                    new FileReader(Utils.resourcePath + Utils.currentDbName + "/metadata.tsv"));
-            String metadata = "";
-            String st = "";
-            while ((st = br.readLine()) != null) {
-                metadata += st;
-            }
-            String[] metaDataTables = metadata.split("~");
-
             // If Metadata contains the table which is in query.
             if (checkIfTableExists(queryTableName)) {
                 BufferedReader br2 = new BufferedReader(
@@ -329,8 +320,9 @@ public class TableProcessor {
                         affectedRows++;
                     }
                 }
-                if(isTransaction){
+                if(isTransaction && flag.equals("local")){
                     Utils.transQueryList.add(query);
+                } else if(isTransaction && flag.equals("remote")){
                     return "deleted successfully";
                 } else {
                 //  Writing to a file
@@ -340,7 +332,6 @@ public class TableProcessor {
                     writer.append(tabledata.get(0));
                     writer.append("\n");
                     writer.append(tabledata.get(1));
-                    String final_str="";
                     int val;
 
                     for(int i=0;i< table.size();i++){
@@ -353,22 +344,18 @@ public class TableProcessor {
                             String value=table.get(i).get(key).toString();
                             if(val==0){
                                 local_str+=value;
-                                final_str+=value;
                                 val++;
                             } else {
                                 local_str+="~"+value;
-                                final_str+="~"+value;
                             }
                         }
                         writer.append(local_str);
-                        final_str+="\n";
                     }
                     writer.close();
                     if(flag.equals("local")){
                         System.out.println(affectedRows+" rows affected");
                     } else
                         return affectedRows+" rows affected";
-
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -507,8 +494,9 @@ public class TableProcessor {
                     }
                 }
 
-                if(isTransaction){
+                if(isTransaction && flag.equals("local")) {
                     Utils.transQueryList.add(query);
+                } else if (isTransaction && flag.equals("remote")){
                     return "updated successfully";
                 } else {
                 //  Writing to a file
