@@ -65,7 +65,16 @@ public class ExportEngine {
                     }
                     else{
                         // perform the data export operation
-                        System.out.println(ipt.trim() + " Database exported successfully to {some path}");
+
+                        if(createExportFile(Arrays.asList(tables.split(Utils.delimiter)), ipt.trim())){
+                            File cPath = new File(".");
+//                            System.out.println(cPath.getCanonicalPath());
+                            System.out.println(ipt.trim() + " Database exported successfully to "+cPath.getCanonicalPath()+"\\"+ipt.trim()+"_exported_data.sql");
+                        }
+                        else{
+                            System.err.println(ipt.trim() + " Database export failed");
+                        }
+
                     }
 
                 } else {
@@ -83,12 +92,122 @@ public class ExportEngine {
 
     }
 
-    private boolean createExportFile(List<String> tables) {
+    private boolean createExportFile(List<String> tables, String dbName) {
         boolean status = false;
-        //FileWriter export = new FileWriter(dbName + "_exported_data.sql");
+        try {
+            FileWriter export = new FileWriter(dbName + "_exported_data.sql");
+
+            for(String table : tables){
+                String [] data = readTableData(table, dbName);
+                export.append(data[0]+"\n");
+                export.append(data[1]+"\n");
+            }
+
+            export.flush();
+            export.close();
+            status = true;
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            status=false;
+        }
 
         return status;
     }
+
+    public static String[] readTableData(String table, String dbName) {
+        String [] data = new String[2]; // create statement and the data in one line
+
+        if(DatabaseProcessor.checkIsLocalDB(dbName) && isLocalTable(table,dbName)){
+            try {
+                String path = Utils.resourcePath + dbName+"/"+table+".tsv";
+                BufferedReader br = new BufferedReader(new FileReader(path));
+                // for create query
+
+                data[0] = br.readLine(); // check with others if they are ok with this
+
+//                int cols = Integer.parseInt(br.readLine().split(Utils.delimiter)[1]);
+//
+//                String line = br.readLine();
+//                String keys = "";
+//                if(line.toLowerCase().contains("primary key") || line.toLowerCase().contains("foreign key"))
+//                    keys = prepareKeys(line.split(Utils.delimiter),cols);
+//                String columns = prepareColumns(line.split(Utils.delimiter), cols);
+//
+//                data[0] = String.format("create table %s ( %s ) %s;",table,columns,keys);
+                br.readLine();
+                br.readLine();
+                String line = null;
+                // for all values
+                StringBuilder sb = new StringBuilder();
+                sb.append("insert into "+table+" values ");
+                while((line=br.readLine())!=null){
+                    sb.append("(");
+                    if(line.contains(Utils.delimiter)) {
+
+                        String splits[] = line.split("~");
+                        for (int i = 0; i < splits.length; i++) {
+                            try {
+                                sb.append(Integer.parseInt(splits[i]));
+                            } catch (Exception e) {
+                                if (!splits[i].contains("'"))
+                                    sb.append("'" + splits[i] + "'");
+                                else
+                                    sb.append(splits[i]);
+                            }
+                            if (i != splits.length - 1)
+                                sb.append(",");
+                        }
+                    }
+                    else{
+                        sb.append(line);
+                    }
+                    sb.append("),");
+                }
+                data[1]=sb.toString().substring(0,sb.length()-1)+";";
+            }
+            catch(Exception e){
+
+            }
+        }
+        else{
+            data = Requester.getInstance().requestVMWholeTable(table, dbName);
+        }
+
+
+        return data;
+    }
+
+    private static boolean isLocalTable(String table, String dbName) {
+        boolean res = false;
+        File file = new File(Utils.resourcePath+dbName+"/"+table+".tsv");
+        if(file.exists())
+            res=true;
+        return res;
+    }
+//
+//    public String prepareKeys(String[] split, int cols) {
+//        return "";
+//    }
+
+
+//    public String prepareColumns(String[] cols, int count) {
+//        StringBuilder sb = new StringBuilder();
+//        int i = count;
+//        // we extract only those many number of columns, we will not worry about primary key and foreign key stuff
+//        for(String col : cols){
+//            if(i-- == 0)
+//                break;
+//            String info [] = col.split(" ");
+//            if(info.length==3){
+//                sb.append(col.replace(info[2],"("+info[2]+"), "));
+//            }
+//            else{
+//                sb.append(col+", ");
+//            }
+//        }
+//        return sb.toString().substring(0,sb.length()-2);
+//    }
 
     public static String getAllAvailableTables(String dbName, boolean shouldRequestVM) {
         ArrayList<String> tables = new ArrayList<String>();

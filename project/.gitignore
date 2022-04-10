@@ -1,10 +1,12 @@
 HELP.md
 target/
-resources/
+resources/*
+resources/gdd.tsv
+resources/configuration.tsv
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
-
+*.sql
 ### STS ###
 .apt_generated
 .classpath

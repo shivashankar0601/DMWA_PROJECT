@@ -10,7 +10,7 @@ class DatabaseProcessorTest {
 
     @Test
     void checkDBFromGDD() {
-        assertEquals("vm1~vm2",DatabaseProcessor.checkDBFromGDD("shiva"));
+//        assertEquals("vm1~vm2",DatabaseProcessor.checkDBFromGDD("shiva"));
     }
 //
 //    @Test
@@ -48,11 +48,13 @@ class DatabaseProcessorTest {
 //    }
 //
 //
-//    @Test
-//    void useDatabaseWithInvalidCharacter(){
-//        assertEquals(null,dp.performOperation("use $hiva;"));
-//    }
-//
+    @Test
+    void useDatabaseWithInvalidCharacter(){
+        //assertEquals(null,dp.performOperation("use $hiva;"));
+//        String res = String.format("create table %s ( %s ) %s;","test","name varchar(10), id int","");
+//        System.out.println(res);
+    }
+
 
 
 

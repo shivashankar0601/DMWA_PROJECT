@@ -2,6 +2,7 @@ package com.example.project.QueryManager;
 
 import com.example.project.DistributedDatabaseLayer.Requester;
 import com.example.project.Utilities.Utils;
+import jdk.jshell.execution.Util;
 
 import java.io.*;
 
@@ -17,7 +18,7 @@ public class DatabaseProcessor {
             selectedDB = (query.split("\s")[2]);
             if (selectedDB.contains(";")) // if there is a ; at the end, we should remove it (; is an optional parameter)
                 selectedDB = selectedDB.substring(0, selectedDB.indexOf(';'));
-            if (!dbExists(selectedDB) && Utils.createDirectory(Utils.resourcePath, selectedDB)) {
+            if (!dbExistsCreate(selectedDB) && Utils.createDirectory(Utils.resourcePath, selectedDB)) {
                 System.out.println("database " + selectedDB + " created successfully");
                 // should update the gdd about the newly created db
                 addNewDB(selectedDB);
@@ -35,7 +36,7 @@ public class DatabaseProcessor {
                 selectedDB = selectedDB.substring(0, selectedDB.indexOf(';'));
 
             // check if you should make dbExists method return type string, i feel like you should
-            if (dbExists(selectedDB)) {
+            if (dbExistsUse(selectedDB)) {
                 System.out.println("selected db " + selectedDB + " successfully from " + (Utils.isVMRequest ? "remote machine" : Utils.currentDevice));
                 return selectedDB;
             } else {
@@ -46,32 +47,109 @@ public class DatabaseProcessor {
         return null;
     }
 
+    private boolean dbExistsUse(String dbName) {
+
+        if (Utils.gddExists) {
+            String res = checkDBFromGDD(dbName);
+
+            // vm1 true and vm2 true return true
+            if (res != null && res.length()>0 && res.contains(Utils.delimiter)) {
+                return true;
+            }
+            // vm1 true vm2 false return true
+            else if (res != null && res.length()>0 && res.contains(Utils.currentDevice)) {
+//                Utils.isVMRequest = false;
+                return true;
+            }
+
+            // vm2 true vm1 false return
+            else if (res != null && res.length()>0 && !res.contains(Utils.currentDevice)) {
+//                Utils.isVMRequest = true;
+                return true;
+            }
+
+            else
+                return false;
+
+        } else {
+
+            String res = Requester.getInstance().requestVMDBCheck(dbName);
+            // vm1~vm2
+            if (res != null && res.length() > 0 && res.contains(Utils.delimiter)) {
+                Utils.isVMRequest = false;
+                return true;
+            }
+            // vm2
+            else if (res != null && res.length() > 0 && !res.contains(Utils.currentDevice)) {
+                Utils.isVMRequest = true;
+                return true;
+            }
+            // vm1
+            else if (res != null && res.length() > 0 && res.contains(Utils.currentDevice)) {
+                Utils.isVMRequest = false;
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void createTableMetadata(String selectedDB) throws IOException {
         FileWriter writer = new FileWriter(Utils.resourcePath + selectedDB + "/metadata.tsv");
         writer.write("");
         writer.close();
     }
 
-    public boolean dbExists(String dbName) {
+    public boolean dbExistsCreate(String dbName) {
         if (Utils.gddExists) {
             String res = checkDBFromGDD(dbName);
-            if (res != null && !res.contains(Utils.currentDevice)) {
-                Utils.isVMRequest = true;
-            } else if (res != null) {
-                Utils.isVMRequest = false;
+
+            // vm1 true and vm2 true return true
+            if (res != null && res.length()>0 && res.contains(Utils.delimiter)) {
                 return true;
             }
+            // vm1 true vm2 false return true
+            else if (res != null && res.length()>0 && res.contains(Utils.currentDevice)) {
+//                Utils.isVMRequest = true;
+                return true;
+            }
+
+            // vm2 true vm1 false return
+            else if (res != null && res.length()>0 && !res.contains(Utils.currentDevice)) {
+//                Utils.isVMRequest = true;
+                return false;
+            }
+            else
+                return false;
+
+
         } else {
-            File f = new File(Utils.resourcePath + dbName);
-            if (f.exists()) {
-                Utils.isVMRequest = false;
-                return true;
-            }
+
             String res = Requester.getInstance().requestVMDBCheck(dbName);
-            if (res != null && res.length() > 0) {
-                Utils.isVMRequest = true;
+            // vm1~vm2
+            if (res != null && res.length() > 0 && res.contains(Utils.delimiter)) {
+//                Utils.isVMRequest = false;
                 return true;
             }
+            // vm2
+            else if (res != null && res.length() > 0 && !res.contains(Utils.currentDevice)) {
+//                Utils.isVMRequest = true;
+                return false;
+            }
+            // vm1
+            else if (res != null && res.length() > 0 && res.contains(Utils.currentDevice)) {
+//                Utils.isVMRequest = false;
+                return true;
+            }
+
+        }
+        return false;
+    }
+
+    public static boolean checkIsLocalDB(String dbName){
+        File f = new File(Utils.resourcePath + dbName);
+        if (f.exists()) {
+//            Utils.isVMRequest = false;
+            return true;
         }
         return false;
     }
@@ -100,7 +178,8 @@ public class DatabaseProcessor {
             if(res.length()>0)
                 return res;
         } catch (FileNotFoundException e) {
-            System.err.println(Utils.gddNotFound);
+            if(!Utils.isVMRequest)
+                System.err.println(Utils.gddNotFound);
             // at least an empty gdd should be made available by the time application is created
         } catch (IOException e) {
             e.printStackTrace();
@@ -116,7 +195,8 @@ public class DatabaseProcessor {
             fileWriter.close();
             return true;
         } catch (FileNotFoundException e) {
-            System.err.println(Utils.gddNotFound);
+            if(!Utils.isVMRequest)
+                System.err.println(Utils.gddNotFound);
             // at least an empty gdd should be made available by the time application is created
         } catch (IOException e) {
             e.printStackTrace();

@@ -1,5 +1,6 @@
 package com.example.project.QueryManager;
 
+import com.example.project.LogManager.LogManager;
 import com.example.project.UIAndSecurity.UserCredentials;
 import com.example.project.Utilities.Utils;
 import java.io.BufferedReader;
@@ -9,6 +10,8 @@ public class QueryProcessor {
     private UserCredentials user;
     private BufferedReader input;
     private String path;
+
+    private LogManager logManager = new LogManager();
 
     public QueryProcessor(BufferedReader input, UserCredentials currentUser, String path) {
         this.user = currentUser;
@@ -23,6 +26,11 @@ public class QueryProcessor {
             do {
                 System.out.print("Query : ");
                 String query = input.readLine();
+                // log the query and current timestamp
+                logManager.writeQueryLog(query, this.user.getName());
+                long startTime = System.currentTimeMillis();
+                long stopTime = 0;
+                String diff = "";
                 switch (queryParser(query)) {
                     case 0: // for both create and use database queries, we should return zero from query processor
                         DatabaseProcessor dbp = new DatabaseProcessor();
@@ -30,6 +38,9 @@ public class QueryProcessor {
                         if (response != null || response != "") {
                             Utils.currentDbName = response;
                         }
+                        stopTime = System.currentTimeMillis();
+                        diff = (stopTime - startTime) + "";
+                        logManager.writeGeneralLog(diff, this.user.getName());
                         break;
                     case 1: // any query related to tables goes here
                         TableProcessor tp = new TableProcessor(path);
@@ -38,6 +49,9 @@ public class QueryProcessor {
                         } else {
                             System.err.println("No database used.");
                         }
+                        stopTime = System.currentTimeMillis();
+                        diff = (stopTime - startTime) + "";
+                        logManager.writeGeneralLog(diff, this.user.getName());
                         break;
                     default:
                         break;
@@ -76,6 +90,7 @@ public class QueryProcessor {
                                 break;
                             }
                         } while(true);
+                        Utils.transQueryList.clear();
                         break;
                 }
             } while (option != 0);

@@ -1,8 +1,10 @@
 package com.example.project.QueryManager;
 
+import com.example.project.LogManager.LogManager;
 import com.example.project.Utilities.Utils;
 
 import java.io.*;
+import java.lang.reflect.UndeclaredThrowableException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -16,6 +18,8 @@ public class TableProcessor {
     private String path;
     private static String query;
 
+    private static LogManager logManager = new LogManager();
+
     public TableProcessor(String path) {
         this.path = path;
     }
@@ -27,7 +31,8 @@ public class TableProcessor {
         String insertIntoRegx = "(insert\\sinto\\s[)(0-9a-zA-Z_\\s,'\"]+)[;]?"; //check if the insert query is in correct format
         String createTableRegx = "^(create\\stable\\s[)(0-9a-zA-Z_\\s,]+)[;]?$";
         String selectTableReg = "^((select)\\s([*]?|[0-9a-zA-Z_ ,]+)\\s(from)\\s([0-9a-zA-Z _'=]+)(\\s(where)\\s([0-9a-zA-Z _'\\\\\"=]+))?)[;]?$";
-
+        String updateTableRegx = "^(update\\s[a-zA-Z][0-9A-Za-z_]+\\sset\\s[a-zA-Z0-9\\\"'\\s$&+,:;=?@#|'<>.^()%!-]+\\swhere\\s[a-zA-Z0-9\\\"'\\s]+=[a-zA-Z0-9\\\"'\\s_|!@#$%^&*)(-.,:]+)[;]?$";
+        String deleteTableRegx = "^(delete from\\s[a-zA-Z][0-9A-Za-z_]+\\swhere\\s[a-zA-Z][a-zA-Z0-9]+=[a-zA-Z0-9\\s_\\\"\\'\\-$#@!]+)[;]?$";
         String flag = "";
         if (Utils.isVMRequest) {
             flag = "remote";
@@ -44,11 +49,17 @@ public class TableProcessor {
         else if (query.matches(createTableRegx)) {
             createTableQuery(query);
         }
-        else if(query.contains("update")) {
-            updateQuery(query,flag);
+        else if(query.matches(updateTableRegx)) {
+            String isValid=updateQuery(query,flag,isTransaction);
+            if(isValid.equals("invalid")) {
+                return false;
+            }
         }
-        else if(query.contains("delete")) {
-            deleteQuery(query,flag);
+        else if(query.matches(deleteTableRegx)) {
+            String isValid=deleteQuery(query,flag,isTransaction);
+            if(isValid.equals("invalid")) {
+                return false;
+            }
         }
         else if (query.matches(selectTableReg)) {
             selectQuery(query,flag);
@@ -77,7 +88,9 @@ public class TableProcessor {
                 if (validateValues(tableName, columnCount, insertValues, isTransaction)) {
                     if (flag.equals("local") && !isTransaction) {
                         System.out.println("inserted successfully");
-                    } else {
+                    } else if(flag.equals("remote") && !isTransaction){
+                        return "success";
+                    }else {
                         return "inserted successfully";
                     }
                 }  else {
@@ -95,7 +108,9 @@ public class TableProcessor {
                         String response = requester.requestVMInsertQuery(query.replaceAll(" ", "%20"), "remote", isTransaction);
                         if(response.equals("invalid")) {
                             return "invalid";
-                        } else {
+                        } else if(!response.equals("invalid") && response.equals("inserted successfully")){
+                            Utils.transQueryList.add(query);
+                        }else {
                             System.out.println(response);
                         }
                     } else {
@@ -118,11 +133,13 @@ public class TableProcessor {
     public static Boolean validateValues(String tableName, int columnCount, List<String> arr, Boolean isTransaction) {
         try {
             BufferedReader br = new BufferedReader(new FileReader(Utils.resourcePath + Utils.currentDbName + "/" + tableName + ".tsv"));
+            br.readLine();// since i added the query in the first line, i am reading an empty line to not cause any discrepancies
             String firstLine = br.readLine();
             String[] firstLineSplit = firstLine.split(Utils.delimiter);
             if (columnCount == Integer.parseInt(firstLineSplit[1])) {
                 if (!isTransaction) {
                     insertValues(tableName, arr);
+                    logManager.writeEventLog("insert", tableName);
                 } else {
                     Utils.transQueryList.add(query);
                 }
@@ -145,6 +162,38 @@ public class TableProcessor {
             out.append(arr.get(i).replaceAll(",", "~").replaceAll("['\"]", ""));
         }
         out.close();
+        BufferedReader br3 = new BufferedReader(
+                new FileReader(Utils.resourcePath + "tableAnalysis.tsv"));
+        ArrayList<String> tableAnalysis = new ArrayList<String>();
+        String st3 = "";
+
+        // Adding data to arraylist line by line.
+        while ((st3 = br3.readLine()) != null) {
+            tableAnalysis.add(st3);
+        }
+        br3.close();
+
+        FileWriter fw1=new FileWriter(Utils.resourcePath+"tableAnalysis.tsv", false);
+        BufferedWriter bw1 = new BufferedWriter(fw1);
+        PrintWriter out1 = new PrintWriter(bw1);
+
+        String writeAnalysis="";
+        for(int i=0;i<tableAnalysis.size();i++){
+            writeAnalysis="";
+            String[] findAndUpdate=tableAnalysis.get(i).split(Utils.delimiter);
+            if(findAndUpdate[0].equals(Utils.currentDbName) && findAndUpdate[1].equals(tableName)){
+                Integer insertCount=Integer.parseInt(findAndUpdate[3])+1;
+                writeAnalysis+=findAndUpdate[0]+"~"+findAndUpdate[1]+"~insert~"+insertCount+"~update~"
+                        +findAndUpdate[5]+"~delete~"+findAndUpdate[7];
+                out1.println(writeAnalysis);
+            } else {
+                writeAnalysis+=tableAnalysis.get(i);
+                out1.println(writeAnalysis);
+            }
+        }
+        out1.close();
+        bw1.close();
+        fw1.close();
     }
 
     public static Boolean checkIfTableExists(String tableName) {
@@ -206,7 +255,7 @@ public class TableProcessor {
                         output += column.replaceAll("[()]", " ").replaceAll("  ", " ").trim() + "~";
                     }
                     columnCount = columnCount - notColumnCount;
-                    output = "columnCount~" + columnCount + "\n" + output;
+                    output = query+"\ncolumnCount~" + columnCount + "\n" + output;
 
                     output = output.substring(0, output.length() - 1);
                     FileWriter fileWriter = new FileWriter(Utils.resourcePath+tablePath, true);
@@ -219,8 +268,16 @@ public class TableProcessor {
                     out.close();
                     bw.close();
                     fw.close();
+                    FileWriter fw1=new FileWriter(Utils.resourcePath+"tableAnalysis.tsv", true);
+                    BufferedWriter bw1 = new BufferedWriter(fw1);
+                    PrintWriter out1 = new PrintWriter(bw1);
+                    String insertAnalysis=Utils.currentDbName+"~"+ tableName+"~insert~0~update~0~delete~0";
+                    out1.println(insertAnalysis);
+                    out1.close();
+                    bw1.close();
+                    fw1.close();
                     System.out.println("Table created");
-
+                    logManager.writeEventLog("create table", tableName);
                 }
                 else{
                     System.out.println("Table already exists!");
@@ -232,7 +289,7 @@ public class TableProcessor {
         }
     }
 
-    public static String deleteQuery(String query, String flag) {
+    public static String deleteQuery(String query, String flag, Boolean isTransaction) {
         try {
             query = query.replaceAll("%20", " ");
             String[] deleteQueryArray = query.split(" ");
@@ -241,16 +298,7 @@ public class TableProcessor {
             String afterWhere = query.substring(query.indexOf("where") + 6, query.indexOf(";") == -1 ? query.length() : query.length() - 1);
 
             // Variable for conditions after where Clause
-            String[] condition = afterWhere.replace("\"","").split("=");
-
-            BufferedReader br = new BufferedReader(
-                    new FileReader(Utils.resourcePath + Utils.currentDbName + "/metadata.tsv"));
-            String metadata = "";
-            String st = "";
-            while ((st = br.readLine()) != null) {
-                metadata += st;
-            }
-            String[] metaDataTables = metadata.split("~");
+            String[] condition = afterWhere.replace("\"","").replace("'","").split("=");
 
             // If Metadata contains the table which is in query.
             if (checkIfTableExists(queryTableName)) {
@@ -259,6 +307,8 @@ public class TableProcessor {
                                 queryTableName+ ".tsv"));
                 ArrayList<String> tabledata = new ArrayList<String>();
                 String st2 = "";
+
+                br2.readLine();// ignore the very first line, so i am reading and ignoring it
 
                 // Adding data to arraylist line by line.
                 while ((st2 = br2.readLine()) != null) {
@@ -295,7 +345,7 @@ public class TableProcessor {
                     }
                 }
 
-                if(!columns.contains(condition[0].toLowerCase())){
+                if(!columns.contains(condition[0].trim().toLowerCase())){
                     throw new Exception("Table "+queryTableName+" does not contain column named '"
                             +condition[0]+"'.");
                 }
@@ -313,12 +363,16 @@ public class TableProcessor {
 
                 for(int i=0;i< table.size();i++){
                     // If query conditions are fulfilled, removing the row
-                    if(table.get(i).containsKey(condition[0]) && table.get(i).containsValue(condition[1])){
+                    if(table.get(i).containsKey(condition[0].trim()) && table.get(i).containsValue(condition[1].trim())){
                         table.remove(i);
                         affectedRows++;
                     }
                 }
-
+                if(isTransaction && flag.equals("local")){
+                    Utils.transQueryList.add(query);
+                } else if(isTransaction && flag.equals("remote")){
+                    return "deleted successfully";
+                } else {
                 //  Writing to a file
                 try {
                     FileWriter file = new FileWriter(Utils.resourcePath+Utils.currentDbName+"/"+queryTableName.toLowerCase()+".tsv", false);
@@ -326,7 +380,6 @@ public class TableProcessor {
                     writer.append(tabledata.get(0));
                     writer.append("\n");
                     writer.append(tabledata.get(1));
-                    String final_str="";
                     int val;
 
                     for(int i=0;i< table.size();i++){
@@ -339,24 +392,56 @@ public class TableProcessor {
                             String value=table.get(i).get(key).toString();
                             if(val==0){
                                 local_str+=value;
-                                final_str+=value;
                                 val++;
                             } else {
                                 local_str+="~"+value;
-                                final_str+="~"+value;
                             }
                         }
                         writer.append(local_str);
-                        final_str+="\n";
                     }
                     writer.close();
+
+                    BufferedReader br3 = new BufferedReader(
+                            new FileReader(Utils.resourcePath + "tableAnalysis.tsv"));
+                    ArrayList<String> tableAnalysis = new ArrayList<String>();
+                    String st3 = "";
+
+                    // Adding data to arraylist line by line.
+                    while ((st3 = br3.readLine()) != null) {
+                        tableAnalysis.add(st3);
+                    }
+                    br3.close();
+
+                    FileWriter fw1=new FileWriter(Utils.resourcePath+"tableAnalysis.tsv", false);
+                    BufferedWriter bw1 = new BufferedWriter(fw1);
+                    PrintWriter out1 = new PrintWriter(bw1);
+
+                    String writeAnalysis="";
+                    for(int i=0;i<tableAnalysis.size();i++){
+                        writeAnalysis="";
+                        String[] findAndUpdate=tableAnalysis.get(i).split(Utils.delimiter);
+                        if(findAndUpdate[0].equals(Utils.currentDbName) && findAndUpdate[1].equals(queryTableName)){
+                            Integer deleteCount=Integer.parseInt(findAndUpdate[7])+1;
+                            writeAnalysis+=findAndUpdate[0]+"~"+findAndUpdate[1]+"~insert~"+findAndUpdate[3]+"~update~"
+                                    +findAndUpdate[5]+"~delete~"+deleteCount;
+                            out1.println(writeAnalysis);
+                        } else {
+                            writeAnalysis+=tableAnalysis.get(i);
+                            out1.println(writeAnalysis);
+                        }
+                    }
+                    out1.close();
+                    bw1.close();
+                    fw1.close();
+
+                    logManager.writeEventLog("delete", queryTableName);
                     if(flag.equals("local")){
                         System.out.println(affectedRows+" rows affected");
                     } else
                         return affectedRows+" rows affected";
-
                 } catch (Exception e) {
                     e.printStackTrace();
+                }
                 }
             } else {
                 if(flag.equals("remote")){
@@ -367,22 +452,33 @@ public class TableProcessor {
                     String vmList = requester.requestVMDBCheck(Utils.currentDbName);
                     if (vmList.split("~").length > 1 || !vmList.equals(Utils.currentDevice)) {
                         requester.requestVMSetCurrentDbName(Utils.currentDbName);
-                        String response = requester.requestVMDeleteQuery(query.replaceAll(" ", "%20"), "remote");
+                        String response = requester.requestVMDeleteQuery(query.replaceAll(" ", "%20"), "remote", isTransaction);
                         System.out.println(response);
+                        if(response.equals("invalid")){
+                            return "invalid";
+                        } else if(!response.equals("invalid") && response.equals("deleted successfully")){
+                            Utils.transQueryList.add(query);
+                        }
                         return response;
                     } else {
+                        if(isTransaction){
+                            return "invalid";
+                        }
                         System.out.println("Table does not exist");
                     }
                 }
             }
         } catch(Exception e){
             System.out.println("Exception: "+e);
+            if(isTransaction){
+                return "invalid";
+            }
             return "Exception: "+e;
         }
         return "";
     }
 
-    public static String updateQuery(String query, String flag) {
+    public static String updateQuery(String query, String flag, Boolean isTransaction) {
         try {
             query = query.replaceAll("%20", " ");
             String[] updateQueryArray = query.split(" ");
@@ -394,14 +490,14 @@ public class TableProcessor {
             String afterWhere = query.substring(query.indexOf("where") + 6, query.indexOf(";") == -1 ? query.length() : query.length() - 1);
 
             // Variable for conditions after where Clause
-            String[] condition = afterWhere.replace("\"","").split("=");
+            String[] condition = afterWhere.replace("\"","").replace("'","").split("=");
             String[] KV = keyValQuery.split(",");
 
             // Parsing and adding [column,new-value] to list
             for (int i = 0; i < KV.length; i++) {
                 ArrayList<String> newl = new ArrayList();
                 newl.add(KV[i].substring(0, KV[i].indexOf("=")).trim());
-                newl.add(KV[i].substring(KV[i].indexOf("=") + 1, KV[i].length()).trim().replace("\"",""));
+                newl.add(KV[i].substring(KV[i].indexOf("=") + 1, KV[i].length()).trim().replace("\"","").replace("'",""));
                 keyVal.add(newl);
             }
 
@@ -411,6 +507,8 @@ public class TableProcessor {
                                 queryTableName + ".tsv"));
                 ArrayList<String> tabledata = new ArrayList<String>();
                 String st2 = "";
+
+                br2.readLine();// reading a line to ignore the structure of the query
 
                 // Adding data to arraylist line by line.
                 while ((st2 = br2.readLine()) != null) {
@@ -455,7 +553,7 @@ public class TableProcessor {
                                 +iter.next().get(0).toString()+"'.");
                     }
                 }
-                if(!columns.contains(condition[0].toLowerCase())){
+                if(!columns.contains(condition[0].trim().toLowerCase())){
                     throw new Exception("Table "+queryTableName+" does not contain column named '"
                             +condition[0]+"'.");
                 }
@@ -473,7 +571,7 @@ public class TableProcessor {
 
                 for(int i=0;i< table.size();i++){
                     // If query conditions are fulfilled, replacing old data with new one
-                    if(table.get(i).containsKey(condition[0]) && table.get(i).containsValue(condition[1])){
+                    if(table.get(i).containsKey(condition[0].trim()) && table.get(i).containsValue(condition[1].trim())){
                         for(int iter1=0;iter1< keyVal.size();iter1++){
                             table.get(i).replace(keyVal.get(iter1).get(0),keyVal.get(iter1).get(1));
                         }
@@ -481,6 +579,11 @@ public class TableProcessor {
                     }
                 }
 
+                if(isTransaction && flag.equals("local")) {
+                    Utils.transQueryList.add(query);
+                } else if (isTransaction && flag.equals("remote")){
+                    return "updated successfully";
+                } else {
                 //  Writing to a file
                 try {
                     FileWriter file = new FileWriter(Utils.resourcePath+Utils.currentDbName+"/"+queryTableName.toLowerCase()+".tsv", false);
@@ -488,7 +591,7 @@ public class TableProcessor {
                     writer.append(tabledata.get(0));
                     writer.append("\n");
                     writer.append(tabledata.get(1));
-                    String final_str="";
+
                     int val;
 
                     for(int i=0;i< table.size();i++){
@@ -501,17 +604,49 @@ public class TableProcessor {
                             String value=table.get(i).get(key).toString();
                             if(val==0){
                                 local_str+=value;
-                                final_str+=value;
                                 val++;
                             } else {
                                 local_str+="~"+value;
-                                final_str+="~"+value;
                             }
                         }
                         writer.append(local_str);
-                        final_str+="\n";
                     }
                     writer.close();
+
+                    BufferedReader br3 = new BufferedReader(
+                            new FileReader(Utils.resourcePath + "tableAnalysis.tsv"));
+                    ArrayList<String> tableAnalysis = new ArrayList<String>();
+                    String st3 = "";
+
+                    // Adding data to arraylist line by line.
+                    while ((st3 = br3.readLine()) != null) {
+                        tableAnalysis.add(st3);
+                    }
+                    br3.close();
+
+                    FileWriter fw1=new FileWriter(Utils.resourcePath+"tableAnalysis.tsv", false);
+                    BufferedWriter bw1 = new BufferedWriter(fw1);
+                    PrintWriter out1 = new PrintWriter(bw1);
+
+                    String writeAnalysis="";
+                    for(int i=0;i<tableAnalysis.size();i++){
+                        writeAnalysis="";
+                        String[] findAndUpdate=tableAnalysis.get(i).split(Utils.delimiter);
+                        if(findAndUpdate[0].equals(Utils.currentDbName) && findAndUpdate[1].equals(queryTableName)){
+                            Integer updateCount=Integer.parseInt(findAndUpdate[5])+1;
+                            writeAnalysis+=findAndUpdate[0]+"~"+findAndUpdate[1]+"~insert~"+findAndUpdate[3]+"~update~"
+                            +updateCount+"~delete~"+findAndUpdate[7];
+                            out1.println(writeAnalysis);
+                        } else {
+                            writeAnalysis+=tableAnalysis.get(i);
+                            out1.println(writeAnalysis);
+                        }
+                    }
+                    out1.close();
+                    bw1.close();
+                    fw1.close();
+                    logManager.writeEventLog("update", queryTableName);
+
                     if(flag.equals("local")){
                         System.out.println(affectedRows+" rows affected");
                     } else
@@ -519,7 +654,7 @@ public class TableProcessor {
 
                 } catch (Exception e) {
                     e.printStackTrace();
-                }
+                }}
             } else {
                 if(flag.equals("remote")){
                     return "Table '" + queryTableName + "' does not exist in " + Utils.currentDbName;
@@ -529,16 +664,27 @@ public class TableProcessor {
                     String vmList = requester.requestVMDBCheck(Utils.currentDbName);
                     if (vmList.split("~").length > 1 || !vmList.equals(Utils.currentDevice)) {
                         requester.requestVMSetCurrentDbName(Utils.currentDbName);
-                        String response = requester.requestVMUpdateQuery(query.replaceAll(" ", "%20"), "remote");
+                        String response = requester.requestVMUpdateQuery(query.replaceAll(" ", "%20"), "remote", isTransaction);
                         System.out.println(response);
+                        if(response.equals("invalid")){
+                            return "invalid";
+                        } else if(!response.equals("invalid") && response.equals("updated successfully")){
+                            Utils.transQueryList.add(query);
+                        }
                         return response;
                     } else {
+                        if(isTransaction){
+                            return "invalid";
+                        }
                         System.out.println("Table does not exist");
                     }
                 }
             }
         } catch(Exception e){
             System.out.println("Exception: "+e);
+            if(isTransaction){
+                return "invalid";
+            }
             return "Exception: "+e;
         }
         return "";
@@ -548,14 +694,14 @@ public class TableProcessor {
         // defining empty method to build the project before pushing, you can replace the body with your functionality hardee
         String processedQuery = "";
         String tableName = "";
-        String columnNameToCheckWhereCondition = "";
-        String columnValueToCheckWhereCondition = "";
+        //String columnNameToCheckWhereCondition = "";
+        //String columnValueToCheckWhereCondition = "";
         String[] columnDetails = new String[2];
         String output = "";
         ArrayList<String> columnNameList = new ArrayList<String>();
         try {
             if (query.contains(";")) {
-                processedQuery = query.substring(1, query.indexOf(';') - 1);
+                processedQuery = query.substring(7, query.indexOf(';'));
             } else {
                 processedQuery = query.substring(7, query.length());
             }
@@ -642,6 +788,7 @@ public class TableProcessor {
         BufferedReader br = new BufferedReader(new FileReader(Utils.resourcePath+Utils.currentDbName+"/"+tableName+".tsv"));
         String line;
         String str = "";
+        br.readLine(); // you can ignore the first line as its the structure of the table
         br.readLine();
         ArrayList<Integer> index = new ArrayList<>();
         String[] columnNames = br.readLine().split("~");
