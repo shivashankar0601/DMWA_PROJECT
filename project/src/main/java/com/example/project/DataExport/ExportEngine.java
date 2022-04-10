@@ -121,14 +121,17 @@ public class ExportEngine {
 
     private String[] readTableData(String table, String dbName) {
         String [] data = new String[2]; // create statement and the data in one line
-        String keys = "";
 
         if(DatabaseProcessor.checkIsLocalDB(dbName)){
             try {
                 BufferedReader br = new BufferedReader(new FileReader(Utils.resourcePath + dbName));
                 // for create query
                 int cols = Integer.parseInt(br.readLine().split(Utils.delimiter)[1]);
-                String columns = prepareColumns(br.readLine().split(Utils.delimiter), cols);
+
+                String columns = br.readLine();
+                String keys = prepareKeys(columns.split(Utils.delimiter),cols);
+                columns = prepareColumns(columns.split(Utils.delimiter), cols);
+
 
 
 
@@ -147,6 +150,10 @@ public class ExportEngine {
 
 
         return data;
+    }
+
+    public String prepareKeys(String[] split, int cols) {
+        return "";
     }
 
 
