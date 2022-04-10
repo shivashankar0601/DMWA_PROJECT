@@ -49,15 +49,18 @@ public class LogManager {
                         + "time:" + (new SimpleDateFormat("dd/MM/yyyy_HH:mm:ss").format(Calendar.getInstance().getTime()))
                         + "\n");
             } else {
-                fw = new FileWriter(generalLogPath + ".tsv");
-                bw = new BufferedWriter(fw);
-                pw = new PrintWriter(bw);
-                pw.print("queryExecutionTime:" + queryExecutionTime + "~"
-                        + "databaseState:" + databaseState + "~"
-                        + "userName:" + userName + "~"
-                        + "deviceName:" + Utils.currentDevice + "~"
-                        + "time:" + (new SimpleDateFormat("dd/MM/yyyy_HH:mm:ss").format(Calendar.getInstance().getTime()))
-                        + "\n");
+                if (Utils.createDirectory(Utils.resourcePath, "Logs") && Utils.createFile(generalLogPath, "")) {
+                    fw = new FileWriter(generalLogPath + ".tsv");
+                    bw = new BufferedWriter(fw);
+                    pw = new PrintWriter(bw);
+                    pw.print("queryExecutionTime:" + queryExecutionTime + "~"
+                            + "databaseState:" + databaseState + "~"
+                            + "userName:" + userName + "~"
+                            + "deviceName:" + Utils.currentDevice + "~"
+                            + "time:" + (new SimpleDateFormat("dd/MM/yyyy_HH:mm:ss").format(Calendar.getInstance().getTime()))
+                            + "\n");
+                }
+
             }
         } catch (IOException e) {
             e.printStackTrace();
