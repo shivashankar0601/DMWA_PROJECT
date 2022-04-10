@@ -25,6 +25,7 @@ public class Utils {
 
     //queryList for Transaction
     public static ArrayList<String> transQueryList = new ArrayList<>();
+    public static ArrayList<String> tableLocked = new ArrayList<>();
 
     public static String hashWithMD5(String user_name) {
         try {
