@@ -48,8 +48,8 @@ public class Responder {
     }
 
     @RequestMapping(value = "/query", params = "insert", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public String performInsertQuery(@RequestParam(value = "insert", defaultValue = "") String query, @RequestParam(value = "flag", defaultValue = "") String flag) {
-        return TableProcessor.insertIntoQuery(query, flag);
+    public String performInsertQuery(@RequestParam(value = "insert", defaultValue = "") String query, @RequestParam(value = "flag", defaultValue = "") String flag, @RequestParam(value = "isTransaction", defaultValue = "") Boolean isTransaction) {
+        return TableProcessor.insertIntoQuery(query, flag, isTransaction);
     }
 
     @RequestMapping(value = "/query", params = "update", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
