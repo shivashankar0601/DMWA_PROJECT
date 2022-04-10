@@ -5,6 +5,7 @@ import com.example.project.Utilities.Utils;
 import java.util.Random;
 
 public class UserCredentials {
+    private String name = null;
     private String username = null;
     private String password = null;
     private String securityQuestion1 = null;
@@ -14,7 +15,7 @@ public class UserCredentials {
     private String securityAnswer2 = null;
     private String securityAnswer3 = null;
 
-    public UserCredentials(String username, String password, String sq1, String sa1, String sq2, String sa2, String sq3, String sa3){
+    public UserCredentials(String username, String password, String sq1, String sa1, String sq2, String sa2, String sq3, String sa3, String name){
         this.username=username;
         this.password = password;
         this.securityQuestion1 = sq1;
@@ -23,6 +24,7 @@ public class UserCredentials {
         this.securityAnswer1 = sa1;
         this.securityAnswer2 = sa2;
         this.securityAnswer3 = sa3;
+        this.name = name;
     }
 
     public String getPassword() {
@@ -42,6 +44,10 @@ public class UserCredentials {
             default:
                 return "";
         }
+    }
+
+    public String getName(){
+        return this.name;
     }
 
     public String getSecurityAnswer1() {

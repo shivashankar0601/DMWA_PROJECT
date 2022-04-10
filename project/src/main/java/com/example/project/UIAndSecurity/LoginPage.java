@@ -69,8 +69,8 @@ public class LoginPage {
             String line = null;
             while ((line = userProfile.readLine() )!= null) {
                 String [] vals = line.split(Utils.delimiter);
-                if(vals.length==8){
-                    credentials.put(vals[0], new UserCredentials(vals[0],vals[1],vals[2],vals[3],vals[4],vals[5],vals[6],vals[7]));
+                if(vals.length==9){
+                    credentials.put(vals[0], new UserCredentials(vals[0],vals[1],vals[2],vals[3],vals[4],vals[5],vals[6],vals[7], vals[8]));
                 }
             }
         }catch (FileNotFoundException ex) {
@@ -117,7 +117,7 @@ public class LoginPage {
             sb.append(line.trim()+ Utils.delimiter);
             System.out.print("Kindly enter your answer : ");
             line = input.readLine();
-            sb.append(line.trim());
+            sb.append(line.trim()+ Utils.delimiter+user);
             FileWriter fileWriter = new FileWriter(path,true);
             fileWriter.append((credentials.size()>0?"\n":"")+sb.toString());
             fileWriter.close();
