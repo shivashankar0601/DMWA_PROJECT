@@ -726,41 +726,38 @@ public class TableProcessor {
         return "";
     }
 
+    //selectQuery extracts the table name, the columns asked by user to be displayed and the condition that should be satisfied for the data displayed
     public static String selectQuery(String query, String flag) {
-        // defining empty method to build the project before pushing, you can replace the body with your functionality hardee
         String processedQuery = "";
         String tableName = "";
-        //String columnNameToCheckWhereCondition = "";
-        //String columnValueToCheckWhereCondition = "";
         String[] columnDetails = new String[2];
         String output = "";
         ArrayList<String> columnNameList = new ArrayList<String>();
+        // to get the name of table, list of column names requested by user and to get the where condition below steps are performed
         try {
+            //for each query the substring containing everything other than the select will be considered while if there is a semicolon at the end it will also be removed
             if (query.contains(";")) {
                 processedQuery = query.substring(7, query.indexOf(';'));
             } else {
                 processedQuery = query.substring(7, query.length());
             }
+            //after keeping only the essential part if a query starts with * and does not contain where condition the tablename can directly be obtained from the processedQuery substring but if the where condition is present it can be split through where to obtain the table name and = to obtain the condition details
             if (processedQuery.startsWith("*")) {
                 columnNameList = null;
                 processedQuery = processedQuery.substring(7, processedQuery.length());
                 if (processedQuery.contains("where")) {
-                    //select * from persons where lastname = lastname1
                     String[] tableDetails = processedQuery.split("where");
                     tableName = tableDetails[0].trim();
                     columnDetails = tableDetails[1].split("=");
-//               columnNameToCheckWhereCondition = columnDetails[0].trim();
-//               columnValueToCheckWhereCondition = columnDetails[1].trim();
                 } else {
-                    //select * from persons ------done
                     tableName = processedQuery.trim();
                     columnDetails = null;
                 }
-                //output = selectReadTable(tableName,columnNameList,columnDetails);
-            } else {
-
+                output = selectReadTable(tableName,columnNameList,columnDetails);
+            }
+            //if query starts with list of column names the names are stored in arraylist
+            else {
                 if (processedQuery.contains("where")) {
-                    //select names, age from testtable where name = hardee
                     String[] tableDetails = processedQuery.split("where");
                     String[] colDetail = tableDetails[0].split("from");
                     columnDetails = tableDetails[1].replaceAll("\"", " ").split("=");
@@ -769,9 +766,8 @@ public class TableProcessor {
                     for (String colName : columnList) {
                         columnNameList.add(colName.trim());
                     }
-                    // output = selectReadTable(tableName,columnNameList,columnDetails);
+                    output = selectReadTable(tableName,columnNameList,columnDetails);
                 } else {
-                    //select name, age from testtable
                     String[] tableDetails = processedQuery.split("from");
                     tableName = tableDetails[1].trim();
                     String[] columnList = tableDetails[0].split(",");
@@ -779,48 +775,74 @@ public class TableProcessor {
                         columnNameList.add(colName.trim());
                     }
                     columnDetails = null;
-                    // output = selectReadTable(tableName,columnNameList,columnDetails);
+                    output = selectReadTable(tableName,columnNameList,columnDetails);
                 }
-
             }
+            // once all the values are obtained the selectReadMTable method is called from respective conditions to obtain the required data from table
+            // this output is stored in the "output" String
+
+            // if tableName is not null then only further steps will be considered
             if (tableName != null) {
+                //checkIfTableExists method is called to check whether the table exist in the current VM.
                 if (checkIfTableExists(tableName)) {
-                    output = selectReadTable(tableName, columnNameList, columnDetails);
+                    //if table exist and the request i.e flag is set for local VM, invalid output is obtained for incorrect column names otherwise the output will be printed.
                     if (flag.equals("local")) {
-                        System.out.println(output);
+                        if(output.equals("invalid")) {
+                            System.out.println("Column name is incorrect");
+                        } else {
+                            System.out.println("output: \n" + output);
+                        }
                         return "";
-                    } else {
+                    }
+                    // for remote VM the output will be returned to the method to print into other VM
+                    else {
                         return output;
                     }
-                } else {
+                }
+                // if the table does not exist
+                else {
+                    // and the request is from remote so it means that it has already been checked in the other VM so we can say that table does not exist.
                     if (flag.equals("remote")) {
                         return "table does not exist";
-                    } else {
+                    }
+                    // if the request is local a request will be made to the other VM through requester
+                    else {
                         Requester requester = Requester.getInstance();
                         String vmList = requester.requestVMDBCheck(Utils.currentDbName);
-                        if (vmList.split("~").length > 1 || !vmList.equals(Utils.currentDevice)) {
+                        //the request will be sent to other VM only if the currentDevice is the requester otherwise we can say table does not exist in both VM
+                        if (vmList.split(Utils.delimiter).length > 1 || !vmList.equals(Utils.currentDevice)) {
                             requester.requestVMSetCurrentDbName(Utils.currentDbName);
                             String response = requester.requestVMSelectQuery(query.replaceAll(" ", "%20"), "remote");
-                            System.out.println(response);
+                            //if the response obtained from the other VM is invalid the string invalid is returned so that while implementing transaction we can use the invalid response to return false for validating the select query
+                            if(response.equals("invalid")) {
+                                return "invalid";
+                            }
+                            // otherwise the response is printed
+                            else {
+                                System.out.println(response);
+                            }
 
-                        } else {
+                        }
+                        else {
                             System.out.println("table does not exist");
-
                         }
                     }
                 }
             } else {
                 System.err.println("query is incorrect");
             }
-
-            output = selectReadTable(tableName, columnNameList, columnDetails);
         } catch (IOException e) {
-            logManager.writeCrashReportsToEventLogs(e.getMessage());
             e.printStackTrace();
         }
-        System.out.println("output: \n" + output);
+        if(output.equals("invalid") && flag.equals("remote")) {
+            System.out.println("Column name is incorrect");
+        } else {
+            System.out.println("output: \n" + output);
+        }
         return "";
     }
+
+    //the extracted information from the selectQuery is passed to this method where the existing data is processed and the required value is returned
     public static String selectReadTable(String tableName, ArrayList<String> columnList, String[] keyValuePair) throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(Utils.resourcePath+Utils.currentDbName+"/"+tableName+".tsv"));
         String line;
@@ -828,23 +850,34 @@ public class TableProcessor {
         br.readLine(); // you can ignore the first line as its the structure of the table
         br.readLine();
         ArrayList<Integer> index = new ArrayList<>();
-        String[] columnNames = br.readLine().split("~");
+        String colName = br.readLine();
+        String[] columnNames = colName.split(Utils.delimiter);
         int whereIndex = -1;
+        //All the column names are obtained from the existing data to match
         for(int j =0;j<columnNames.length;j++) {
+            //if the columnList is not null the whole list is iterated to compare the column name to store the index of the required column
             if(columnList!=null) {
                 for (int i = 0; i < columnList.size(); i++) {
-                    if (columnList.get(i).equals(columnNames[j].split(" ")[0])) {
-                        index.add(j);
+                    if(colName.contains(columnList.get(i))) {
+                        if (columnList.get(i).equals(columnNames[j].split(" ")[0])) {
+                            index.add(j);
+                        }
+                    }
+                    //if the columnName string does not contain the column name requested by the user we can say that the column is not present in the data hence return invalid
+                    else {
+                        return "invalid";
                     }
                 }
             }
+            //columnList is null it means all the columns details are to be printed hence the index of the column added in where condition is stored
             if(keyValuePair!=null && columnNames[j].split(" ")[0].equals(keyValuePair[0].trim())) {
                 whereIndex = j;
             }
         }
+        //in case of all the column details are requested the index of where condition column is used to split and compare the value to each rows and when the condition satisfies the row data is appended to output string
         if(columnList==null) {
             while ((line = br.readLine()) != null && line.length() > 0) {
-                String [] lineSplits = line.split("~");
+                String [] lineSplits = line.split(Utils.delimiter);
                 if(whereIndex>-1) {
                     if(lineSplits[whereIndex].equals(keyValuePair[1].trim())) {
                         str += line + "\n";
@@ -854,28 +887,35 @@ public class TableProcessor {
                 }
             }
             return str;
-        } else {
-            while ((line = br.readLine()) != null && line.length() > 0) {
-                String [] lineSplits = line.split("~");
-                for(int i =0;i<index.size();i++) {
-                    if(whereIndex>-1) {
-                        if(lineSplits[whereIndex].equals(keyValuePair[1].trim())) {
-                            str += lineSplits[index.get(i)] + "~";
+        }
+        //but if the user wants only the requested columns in case of a where condition below logic will be used where the index stored in the above loop will be used to split the data rows and append only the specific column data to the output
+        else {
+            if(index.size()>0) {
+                while ((line = br.readLine()) != null && line.length() > 0) {
+                    String[] lineSplits = line.split(Utils.delimiter);
+                    for (int i = 0; i < index.size(); i++) {
+                        //if where condition index is set then data for when the condition satisfies only will be appended
+                        if (whereIndex > -1) {
+                            if (lineSplits[whereIndex].equals(keyValuePair[1].trim())) {
+                                str += lineSplits[index.get(i)] + Utils.delimiter;
+                            }
                         }
-                    } else {
-                        str += lineSplits[index.get(i)] + "~";
+                        // otherwise all the row data will be appended
+                        else {
+                            str += lineSplits[index.get(i)] + Utils.delimiter;
+                        }
+                    }
+                    if (str != "") {
+                        str = str.substring(0, str.length() - 1);
+                        str += "\n";
                     }
                 }
-                if(str!=""){
-                    str = str.substring(0,str.length()-1);
-                    str+="\n";
-                }
-
+                br.close();
+                return str;
+            } else {
+                return "invalid";
             }
-            br.close();
-            return str;
         }
-
     }
 
 }
