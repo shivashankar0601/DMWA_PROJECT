@@ -47,7 +47,8 @@ public class fetchAnalysis {
             ArrayList<String> db=new ArrayList<>();
             ArrayList<String> device=new ArrayList<>();
             for(int i=0;i<queryLogs.size();i++){
-                if(!queryLogs.get(i).split(Utils.delimiter)[2].split(":")[1].equals("null")){
+                if(queryLogs.get(i).split(Utils.delimiter)[2].split(":").length>1
+                && !queryLogs.get(i).split(Utils.delimiter)[2].split(":")[1].equals("null")){
                     String local_str=queryLogs.get(i).split(Utils.delimiter)[1].split(":")[1]+"~"+
                             queryLogs.get(i).split(Utils.delimiter)[2].split(":")[1]+"~"+
                             queryLogs.get(i).split(Utils.delimiter)[3].split(":")[1];
