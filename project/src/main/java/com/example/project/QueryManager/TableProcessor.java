@@ -85,32 +85,16 @@ public class TableProcessor {
         if (tableName != null) {
             if (checkIfTableExists(tableName)) {
 
-                while(Utils.tableLocked.contains(tableName)) {
-                    try {
-                        System.out.println("Waiting for the lock to get released...");
-                        sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                Utils.tableLocked.add(tableName);
-
                 if (validateValues(tableName, columnCount, insertValues, isTransaction)) {
                     if (flag.equals("local") && !isTransaction) {
                         System.out.println("inserted successfully");
-                        if(Utils.tableLocked.contains(tableName))
-                            Utils.tableLocked.remove(tableName);
                     } else if(flag.equals("remote") && !isTransaction){
-                        if(Utils.tableLocked.contains(tableName))
-                            Utils.tableLocked.remove(tableName);
                         return "success";
                     } else {
                         return "inserted successfully";
                     }
                 }  else {
                     System.err.println("Column length is incorrect");
-                    if(Utils.tableLocked.contains(tableName))
-                        Utils.tableLocked.remove(tableName);
                     return "invalid";
                 }
             } else {
