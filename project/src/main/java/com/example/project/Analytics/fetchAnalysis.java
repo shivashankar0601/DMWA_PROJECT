@@ -33,7 +33,7 @@ public class fetchAnalysis {
     private void countQueries(String query) {
         try{
             BufferedReader br3 = new BufferedReader(
-                    new FileReader(Utils.resourcePath + "queryLogs.tsv"));
+                    new FileReader(Utils.resourcePath + "Logs/queryLogs.tsv"));
             ArrayList<String> queryLogs = new ArrayList<String>();
             String st3 = "";
 
@@ -66,7 +66,8 @@ public class fetchAnalysis {
                 } else
                     str2=checkIfExistsInStr(str2, str.get(i));
             }
-            FileWriter fw1=new FileWriter(Utils.resourcePath+"countQueries.tsv", false);
+            if(str2.size()>0){
+            FileWriter fw1=new FileWriter(Utils.resourcePath+"/countQueries.tsv", false);
             BufferedWriter bw1 = new BufferedWriter(fw1);
             PrintWriter out1 = new PrintWriter(bw1);
             for(int i=0;i< str2.size();i++){
@@ -80,6 +81,9 @@ public class fetchAnalysis {
             out1.close();
             bw1.close();
             fw1.close();
+            } else {
+                System.out.println("No queries found");
+            }
         } catch (Exception e){
             System.out.println(e);
         }
@@ -126,6 +130,7 @@ public class fetchAnalysis {
                     resultData.add(tableAnalysis.get(i));
                 }
             }
+            if(resultData.size()>0){
             FileWriter fw1=new FileWriter(Utils.resourcePath+"updateCountAnalysis.tsv", false);
             BufferedWriter bw1 = new BufferedWriter(fw1);
             PrintWriter out1 = new PrintWriter(bw1);
@@ -137,6 +142,9 @@ public class fetchAnalysis {
             out1.close();
             bw1.close();
             fw1.close();
+            } else {
+                System.out.println("No update operations found");
+            }
 
         } catch (Exception e){
             logManager.writeCrashReportsToEventLogs(e.getMessage());
@@ -165,19 +173,23 @@ public class fetchAnalysis {
                     resultData.add(tableAnalysis.get(i));
                 }
             }
-            FileWriter fw1=new FileWriter(Utils.resourcePath+"insertCountAnalysis.tsv", false);
-            BufferedWriter bw1 = new BufferedWriter(fw1);
-            PrintWriter out1 = new PrintWriter(bw1);
+            if(resultData.size()>0) {
+                FileWriter fw1 = new FileWriter(Utils.resourcePath + "insertCountAnalysis.tsv", false);
+                BufferedWriter bw1 = new BufferedWriter(fw1);
+                PrintWriter out1 = new PrintWriter(bw1);
 
-            for(int i=0;i<resultData.size();i++){
-                String[] out=resultData.get(i).split(Utils.delimiter);
-                System.out.println("Total "+out[3]+" Update operations are performed on "+out[1]);
-                out1.println("Total "+out[3]+" Update operations are performed on "+out[1]);
+                for (int i = 0; i < resultData.size(); i++) {
+                    String[] out = resultData.get(i).split(Utils.delimiter);
+                    System.out.println("Total " + out[3] + " Insert operations are performed on " + out[1]);
+                    out1.println("Total " + out[3] + " Insert operations are performed on " + out[1]);
+                }
+                out1.close();
+                bw1.close();
+                fw1.close();
             }
-            out1.close();
-            bw1.close();
-            fw1.close();
-
+            else {
+                System.out.println("No insert operations found");
+            }
         } catch (Exception e){
             logManager.writeCrashReportsToEventLogs(e.getMessage());
             System.out.println(e);
@@ -204,6 +216,7 @@ public class fetchAnalysis {
                     resultData.add(tableAnalysis.get(i));
                 }
             }
+            if(resultData.size()>0){
             FileWriter fw1=new FileWriter(Utils.resourcePath+"deleteCountAnalysis.tsv", false);
             BufferedWriter bw1 = new BufferedWriter(fw1);
             PrintWriter out1 = new PrintWriter(bw1);
@@ -215,7 +228,10 @@ public class fetchAnalysis {
             }
             out1.close();
             bw1.close();
-            fw1.close();
+            fw1.close();}
+            else {
+                System.out.println("No Delete Operations Found");
+            }
 
         } catch (Exception e){
             logManager.writeCrashReportsToEventLogs(e.getMessage());

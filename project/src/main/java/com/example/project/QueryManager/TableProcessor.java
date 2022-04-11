@@ -5,10 +5,7 @@ import com.example.project.Utilities.Utils;
 
 import java.io.*;
 import java.lang.reflect.UndeclaredThrowableException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import com.example.project.DistributedDatabaseLayer.Requester;
@@ -87,37 +84,21 @@ public class TableProcessor {
 
         if (tableName != null) {
             if (checkIfTableExists(tableName)) {
-                while(Utils.tableLocked.contains(tableName)) {
-                    try {
-                        System.out.println("Waiting for the lock to get released...");
-                        sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                Utils.tableLocked.add(tableName);
+
                 if (validateValues(tableName, columnCount, insertValues, isTransaction)) {
                     if (flag.equals("local") && !isTransaction) {
                         System.out.println("inserted successfully");
                     } else if(flag.equals("remote") && !isTransaction){
-                        if(Utils.tableLocked.contains(tableName))
-                            Utils.tableLocked.remove(tableName);
                         return "success";
                     } else {
-                        if(Utils.tableLocked.contains(tableName))
-                            Utils.tableLocked.remove(tableName);
                         return "inserted successfully";
                     }
                 }  else {
                     System.err.println("Column length is incorrect");
-                    if(Utils.tableLocked.contains(tableName))
-                        Utils.tableLocked.remove(tableName);
                     return "invalid";
                 }
             } else {
                 if (flag.equals("remote")) {
-                    if(Utils.tableLocked.contains(tableName))
-                        Utils.tableLocked.remove(tableName);
                     return "table does not exist";
                 } else {
                     Requester requester = Requester.getInstance();
@@ -126,8 +107,6 @@ public class TableProcessor {
                         requester.requestVMSetCurrentDbName(Utils.currentDbName);
                         String response = requester.requestVMInsertQuery(query.replaceAll(" ", "%20"), "remote", isTransaction);
                         if(response.equals("invalid")) {
-                            if(Utils.tableLocked.contains(tableName))
-                                Utils.tableLocked.remove(tableName);
                             return "invalid";
                         } else if(!response.equals("invalid") && response.equals("inserted successfully")){
                             Utils.transQueryList.add(query);
@@ -136,20 +115,14 @@ public class TableProcessor {
                         }
                     } else {
                         System.out.println("table does not exist");
-                        if(Utils.tableLocked.contains(tableName))
-                            Utils.tableLocked.remove(tableName);
                         return "invalid";
                     }
                 }
             }
         } else {
             System.err.println("query is incorrect");
-            if(Utils.tableLocked.contains(tableName))
-                Utils.tableLocked.remove(tableName);
             return "invalid";
         }
-        if(Utils.tableLocked.contains(tableName))
-            Utils.tableLocked.remove(tableName);
         return "";
     }
 
@@ -340,7 +313,7 @@ public class TableProcessor {
                 ArrayList<String> tabledata = new ArrayList<String>();
                 String st2 = "";
 
-                br2.readLine();// ignore the very first line, so i am reading and ignoring it
+                String our_query=br2.readLine();// ignore the very first line, so i am reading and ignoring it
 
                 // Adding data to arraylist line by line.
                 while ((st2 = br2.readLine()) != null) {
@@ -409,6 +382,8 @@ public class TableProcessor {
                 try {
                     FileWriter file = new FileWriter(Utils.resourcePath+Utils.currentDbName+"/"+queryTableName.toLowerCase()+".tsv", false);
                     PrintWriter writer=new PrintWriter(file);
+                    writer.append(our_query);
+                    writer.append("\n");
                     writer.append(tabledata.get(0));
                     writer.append("\n");
                     writer.append(tabledata.get(1));
@@ -542,7 +517,7 @@ public class TableProcessor {
                 ArrayList<String> tabledata = new ArrayList<String>();
                 String st2 = "";
 
-                br2.readLine();// reading a line to ignore the structure of the query
+                String our_query=br2.readLine();// reading a line to ignore the structure of the query
 
                 // Adding data to arraylist line by line.
                 while ((st2 = br2.readLine()) != null) {
@@ -622,6 +597,8 @@ public class TableProcessor {
                 try {
                     FileWriter file = new FileWriter(Utils.resourcePath+Utils.currentDbName+"/"+queryTableName.toLowerCase()+".tsv", false);
                     PrintWriter writer=new PrintWriter(file);
+                    writer.append(our_query);
+                    writer.append("\n");
                     writer.append(tabledata.get(0));
                     writer.append("\n");
                     writer.append(tabledata.get(1));
@@ -790,7 +767,8 @@ public class TableProcessor {
                         if(output.equals("invalid")) {
                             System.out.println("Column name is incorrect");
                         } else {
-                            System.out.println("output: \n" + output);
+                            beautifyOutput(output,tableName);
+                            //System.out.println("output: \n" + output);
                         }
                         return "";
                     }
@@ -837,10 +815,79 @@ public class TableProcessor {
         if(output.equals("invalid") && flag.equals("remote")) {
             System.out.println("Column name is incorrect");
         } else {
-            System.out.println("output: \n" + output);
+            beautifyOutput(output,tableName);
+            //System.out.println("output: \n" + output);
         }
         return "";
     }
+
+
+    private static void beautifyOutput(String data, String tableName) {
+        List<String> cols = getColumnsFromTable(tableName);
+
+        String dashes = new String(new char[cols.size()*20]).replace('\0', '-');
+
+        if(cols.size()!=0){
+            printTableHeader(cols, dashes);
+        }
+        else{
+            // i wonder if this return ever has to execute
+            return;
+        }
+
+        List<String> vals = Arrays.asList(data.split("\\r?\\n"));
+
+        // empty table without values
+        if(vals.size()==0)
+            return;
+
+        for(int i=0;i<vals.size();i++) {
+            String valsSplit[] = vals.get(i).split(Utils.delimiter);
+            for (int j=0;j<valsSplit.length;j++)
+                System.out.print(String.format("%20s", valsSplit[j]));
+            System.out.println();
+        }
+        System.out.println(dashes);
+
+    }
+
+    private static void printTableHeader(List<String> cols, String dashes) {
+        System.out.println(dashes);
+        for(int i=0;i<cols.size();i++)
+            System.out.print(String.format("%20s",cols.get(i)));
+        System.out.println("\n"+dashes);
+    }
+
+
+    private static List<String> getColumnsFromTable(String tableName) {
+        ArrayList<String> res = new ArrayList<>();
+        try {
+
+            BufferedReader br = new BufferedReader(new FileReader(Utils.resourcePath + Utils.currentDbName + "/" + tableName + ".tsv"));
+            br.readLine();
+            int count = Integer.parseInt(br.readLine().split(Utils.delimiter)[1]);
+
+            String col[] = br.readLine().split(Utils.delimiter);
+            for(int i=0;i<count;i++){
+                res.add(col[i].split(" ")[0]);
+            }
+            return res;
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+
+        return res;
+    }
+
+
+
+
+
+
+
+
+
 
     //the extracted information from the selectQuery is passed to this method where the existing data is processed and the required value is returned
     public static String selectReadTable(String tableName, ArrayList<String> columnList, String[] keyValuePair) throws IOException {
