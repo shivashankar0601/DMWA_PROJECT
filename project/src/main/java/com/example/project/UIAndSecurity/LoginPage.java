@@ -16,19 +16,17 @@ public class LoginPage {
 
     private UserCredentials currentUser = null;
 
-    LogManager logManager = new LogManager();
 
-    public void loginMenu(){
+    public void loginMenu() {
         try {
             // loading all the configuration parameters needed from configuration.tsv
             try {
                 Utils.loadConfiguration();
                 System.out.println("configuration loaded successfully");
-            }
-            catch(Exception e){
-                logManager.writeCrashReportsToEventLogs(e.getMessage());
+            } catch (Exception e) {
+                LogManager.writeCrashReportsToEventLogs(e.getLocalizedMessage());
                 // if there was an error configuring the db, then there is no point in moving forward with those errors, so we exit
-                e.printStackTrace();
+//                e.printStackTrace();
                 System.exit(1);
             }
 
@@ -38,11 +36,11 @@ public class LoginPage {
 
             int option = 0;
 
-            System.out.println("Welcome to Distributed Database Management System on "+Utils.currentDevice);
+            System.out.println("Welcome to Distributed Database Management System on " + Utils.currentDevice);
             do {
                 System.out.print("Kindly select one of the below options\n1. Login\n2. Register\nkindly enter your selection (enter 0 to exit): ");
                 option = Integer.parseInt(input.readLine());
-                switch(option){
+                switch (option) {
                     case 0:
                         // by default we do not do anything as the user want's to quit
                         break;
@@ -50,7 +48,7 @@ public class LoginPage {
                         authenticateUser(userCredentials, input);
                         break;
                     case 2:
-                        createNewUser(userCredentials,input,Utils.userProfiles);
+                        createNewUser(userCredentials, input, Utils.userProfiles);
                         userCredentials = getCredentialsFromUserProfilesFile(Utils.userProfiles); // updating credentials with most recent data
                         break;
                     default:
@@ -59,31 +57,30 @@ public class LoginPage {
                         break;
                 }
             } while (option != 0);
-        }
-        catch (Exception e){
-            logManager.writeCrashReportsToEventLogs(e.getMessage());
+        } catch (Exception e) {
+            LogManager.writeCrashReportsToEventLogs(e.getLocalizedMessage());
             System.out.println(e.getLocalizedMessage());
         }
     }
 
 
-    private Map<String,UserCredentials> getCredentialsFromUserProfilesFile(String s) {
+    private Map<String, UserCredentials> getCredentialsFromUserProfilesFile(String s) {
         Map<String, UserCredentials> credentials = new HashMap<String, UserCredentials>();
         try {
             BufferedReader userProfile = new BufferedReader(new FileReader(s));
             String line = null;
-            while ((line = userProfile.readLine() )!= null) {
-                String [] vals = line.split(Utils.delimiter);
-                if(vals.length==9){
-                    credentials.put(vals[0], new UserCredentials(vals[0],vals[1],vals[2],vals[3],vals[4],vals[5],vals[6],vals[7], vals[8]));
+            while ((line = userProfile.readLine()) != null) {
+                String[] vals = line.split(Utils.delimiter);
+                if (vals.length == 9) {
+                    credentials.put(vals[0], new UserCredentials(vals[0], vals[1], vals[2], vals[3], vals[4], vals[5], vals[6], vals[7], vals[8]));
                 }
             }
-        }catch (FileNotFoundException ex) {
-            logManager.writeCrashReportsToEventLogs(ex.getMessage());
-            System.out.println(ex.getLocalizedMessage());
+        } catch (FileNotFoundException ex) {
+            LogManager.writeCrashReportsToEventLogs(ex.getLocalizedMessage());
+//            System.out.println(ex.getLocalizedMessage());
         } catch (IOException ex) {
-            logManager.writeCrashReportsToEventLogs(ex.getMessage());
-            System.out.println(ex.getLocalizedMessage());
+            LogManager.writeCrashReportsToEventLogs(ex.getLocalizedMessage());
+//            System.out.println(ex.getLocalizedMessage());
         }
         return credentials;
     }
@@ -93,48 +90,47 @@ public class LoginPage {
         String user = null;
         String line = null;
         try {// username and password
-            while(true) {
+            while (true) {
                 System.out.print("Kindly enter username : ");
                 user = input.readLine();
                 line = Utils.hashWithMD5(user);
-                if(credentials.containsKey(line)){
+                if (credentials.containsKey(line)) {
                     System.out.println("Username already in use, kindly try a different one");
-                }
-                else
+                } else
                     break;
             }
-            sb.append(line.trim()+ Utils.delimiter);
+            sb.append(line.trim() + Utils.delimiter);
             System.out.print("Kindly enter password : ");
             line = Utils.hashWithMD5(input.readLine());
-            sb.append(line.trim()+ Utils.delimiter);
+            sb.append(line.trim() + Utils.delimiter);
             System.out.print("Kindly enter your 1st security question : ");
             line = input.readLine();
-            sb.append(line.trim()+ Utils.delimiter);
+            sb.append(line.trim() + Utils.delimiter);
             System.out.print("Kindly enter your answer : ");
             line = input.readLine();
-            sb.append(line.trim()+ Utils.delimiter);
+            sb.append(line.trim() + Utils.delimiter);
             System.out.print("Kindly enter your 2nd security question : ");
             line = input.readLine();
-            sb.append(line.trim()+ Utils.delimiter);
+            sb.append(line.trim() + Utils.delimiter);
             System.out.print("Kindly enter your answer : ");
             line = input.readLine();
-            sb.append(line.trim()+ Utils.delimiter);
+            sb.append(line.trim() + Utils.delimiter);
             System.out.print("Kindly enter your 3rd security question : ");
             line = input.readLine();
-            sb.append(line.trim()+ Utils.delimiter);
+            sb.append(line.trim() + Utils.delimiter);
             System.out.print("Kindly enter your answer : ");
             line = input.readLine();
-            sb.append(line.trim()+ Utils.delimiter+user);
-            FileWriter fileWriter = new FileWriter(path,true);
-            fileWriter.append((credentials.size()>0?"\n":"")+sb.toString());
+            sb.append(line.trim() + Utils.delimiter + user);
+            FileWriter fileWriter = new FileWriter(path, true);
+            fileWriter.append((credentials.size() > 0 ? "\n" : "") + sb.toString());
             fileWriter.close();
 //            if(Utils.createDirectory(Utils.resourcePath,user))
-            System.out.println("User "+user+" created successfully");
+            System.out.println("User " + user + " created successfully");
 //            else
 //                throw new Exception("user directory creation error");
         } catch (Exception e) {
-            logManager.writeCrashReportsToEventLogs(e.getMessage());
-            System.out.println(e.getLocalizedMessage());
+            LogManager.writeCrashReportsToEventLogs(e.getLocalizedMessage());
+//            System.out.println(e.getLocalizedMessage());
         }
     }
 
@@ -148,7 +144,7 @@ public class LoginPage {
             do {
                 System.out.print("Kindly enter username : ");
                 user = input.readLine();
-                if(user.equalsIgnoreCase("0"))
+                if (user.equalsIgnoreCase("0"))
                     break;
                 username = Utils.hashWithMD5(user);
                 System.out.print("Kindly enter password : ");
@@ -157,7 +153,7 @@ public class LoginPage {
                 if (credentials.containsKey(username)) {
                     if (credentials.get(username).getPassword().equalsIgnoreCase(password)) {
 
-                        for(int j = 0;j<3; j++) {
+                        for (int j = 0; j < 3; j++) {
 
                             // security questions just like GCKEY
                             String q[] = credentials.get(username).getRandomQuestion().split(Utils.delimiter);
@@ -166,15 +162,14 @@ public class LoginPage {
                                 System.err.println("wrong answer for security question, kindly try again");
                                 try {
                                     TimeUnit.SECONDS.sleep(1);
-                                    if(j==2)
+                                    if (j == 2)
                                         return;
                                 } catch (InterruptedException e) {
                                     //e.printStackTrace();
-                                    logManager.writeCrashReportsToEventLogs(e.getMessage());
+                                    LogManager.writeCrashReportsToEventLogs(e.getLocalizedMessage());
                                 }
                                 continue;
-                            }
-                            else {
+                            } else {
                                 isUserValidated = true;
                                 this.currentUser = credentials.get(username);
                                 System.out.println("user validated successfully");
@@ -185,32 +180,31 @@ public class LoginPage {
 
                     } else
                         System.out.println("Invalid password, Try again");
-                }
-                else {
+                } else {
                     System.out.println("Invalid credentials, Try again");
                     System.err.println("enter 0 as username to exit:");
                     try {
                         TimeUnit.SECONDS.sleep(1);
                     } catch (InterruptedException e) {
                         //e.printStackTrace();
-                        logManager.writeCrashReportsToEventLogs(e.getMessage());
+                        LogManager.writeCrashReportsToEventLogs(e.getLocalizedMessage());
                     }
                 }
 
             } while (!isUserValidated);
         } catch (IOException e) {
-            System.out.println(e.getLocalizedMessage());
+            LogManager.writeCrashReportsToEventLogs(e.getLocalizedMessage());
+//            System.out.println(e.getLocalizedMessage());
         }
 
     }
 
-    private void navigateToMenu(BufferedReader input, UserCredentials currentUser, String user){
-        if(currentUser!=null) {
+    private void navigateToMenu(BufferedReader input, UserCredentials currentUser, String user) {
+        if (currentUser != null) {
             Menu menu = new Menu(input, currentUser, Utils.resourcePath + user + "/");
             menu.displayMenu();
         }
     }
-
 
 
 }

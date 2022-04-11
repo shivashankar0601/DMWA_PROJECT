@@ -54,8 +54,6 @@ public class QueryProcessor {
                         diff = (stopTime - startTime) + "";
                         logManager.writeGeneralLog(diff, this.user.getName());
                         break;
-                    default:
-                        break;
                     case 2: // for transaction queries
                         System.out.println("Write your queries in transaction");
                         // read transaction queries until end transaction is encountered
@@ -93,6 +91,12 @@ public class QueryProcessor {
                         } while(true);
                         Utils.transQueryList.clear();
                         break;
+                    case 4:
+                        TableProcessor t = new TableProcessor(path);
+                        t.listQuery(query);
+                        break;
+                    default:
+                        break;
                 }
             } while (true);
         } catch (IOException e) {
@@ -108,6 +112,8 @@ public class QueryProcessor {
             return 2;
         else if (query.toLowerCase().contains("commit"))
             return 3;
+        else if (query.toLowerCase().contains("list"))
+            return 4;
         else
             return 0;
     }

@@ -16,8 +16,6 @@ public class Menu {
     private UserCredentials currentUser = null;
     private String path = null;
 
-    LogManager logManager = new LogManager();
-
     public Menu(BufferedReader input, UserCredentials currentUser, String path) {
         this.input = input;
         this.currentUser = currentUser;
@@ -36,13 +34,12 @@ public class Menu {
                 try {
                     option = Integer.parseInt(input.readLine());
                 } catch (Exception e) {
-                    logManager.writeCrashReportsToEventLogs(e.getMessage());
-                    logManager.writeCrashReportsToEventLogs(e.getMessage());
                     System.err.println("wrong input received, try again");
                     try {
                         TimeUnit.SECONDS.sleep(1);
                         continue;
                     } catch (InterruptedException ie) {
+                        LogManager.writeCrashReportsToEventLogs(e.getLocalizedMessage());
                         //ie.printStackTrace();
                     }
                 }
@@ -65,7 +62,7 @@ public class Menu {
                         dataModelingEngine.begin();
                         break;
                     case 4:
-                        AnalysisEngine analysisEngine=new AnalysisEngine(input, currentUser, path);
+                        AnalysisEngine analysisEngine = new AnalysisEngine(input, currentUser, path);
                         analysisEngine.begin();
                         break;
                     default:
@@ -75,8 +72,8 @@ public class Menu {
                 }
 
             } catch (Exception e) {
-                logManager.writeCrashReportsToEventLogs(e.getMessage());
-                System.out.println(e.getLocalizedMessage());
+                LogManager.writeCrashReportsToEventLogs(e.getLocalizedMessage());
+//                System.out.println(e.getLocalizedMessage());
             }
 
         } while (option != 0);

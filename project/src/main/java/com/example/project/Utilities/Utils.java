@@ -40,9 +40,9 @@ public class Utils {
             }
             return final_value;
         } catch (Exception e) {
-            logManager.writeCrashReportsToEventLogs(e.getMessage());
+            LogManager.writeCrashReportsToEventLogs(e.getLocalizedMessage());
             //System.out.println(e.getLocalizedMessage());;
-            e.printStackTrace();
+//            e.printStackTrace();
         }
         return null;
     }
@@ -53,8 +53,8 @@ public class Utils {
             f.mkdir();
             return true;
         } catch (Exception e) {
-            logManager.writeCrashReportsToEventLogs(e.getMessage());
-            e.printStackTrace();
+            LogManager.writeCrashReportsToEventLogs(e.getLocalizedMessage());
+//            e.printStackTrace();
         }
         return false;
     }
@@ -65,8 +65,8 @@ public class Utils {
             f.createNewFile();
             return true;
         } catch (Exception e) {
-            logManager.writeCrashReportsToEventLogs(e.getMessage());
-            e.printStackTrace();
+            LogManager.writeCrashReportsToEventLogs(e.getLocalizedMessage());
+//            e.printStackTrace();
         }
         return false;
     }
@@ -76,10 +76,10 @@ public class Utils {
         try {
 
             File rPath = new File("./resources");
-            if(!rPath.exists()){
+            if (!rPath.exists()) {
                 rPath.mkdir();
                 System.out.println("resources directory created successfully");
-                FileWriter conf = new FileWriter(resourcePath+"configuration.tsv");
+                FileWriter conf = new FileWriter(resourcePath + "configuration.tsv");
                 conf.write("name~vm1\nvm~0.0.0.0\ngdd~true");//default configuration
                 conf.flush();
                 conf.close();
@@ -97,7 +97,7 @@ public class Utils {
                 else if (splits[0].equalsIgnoreCase("gdd")) {
                     gddExists = Boolean.parseBoolean(splits[1]);
 
-                    if(gddExists==true){ // creating gdd automatically if it is not created by the administrator
+                    if (gddExists == true) { // creating gdd automatically if it is not created by the administrator
                         File f = new File(Utils.resourcePath + "gdd.tsv");
                         if (!f.exists()) {
                             FileWriter fileWriter = new FileWriter(Utils.resourcePath + "gdd.tsv");
@@ -116,10 +116,9 @@ public class Utils {
                 fileWriter.flush();
                 fileWriter.close();
             }
-        }
-        catch(Exception e){
-            logManager.writeCrashReportsToEventLogs(e.getMessage());
-            System.err.println(e.getLocalizedMessage());
+        } catch (Exception e) {
+            LogManager.writeCrashReportsToEventLogs(e.getLocalizedMessage());
+//            System.err.println(e.getLocalizedMessage());
             return false;
         }
         return true;

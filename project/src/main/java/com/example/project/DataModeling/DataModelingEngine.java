@@ -15,8 +15,7 @@ public class DataModelingEngine {
     private BufferedReader input = null;
     private UserCredentials currentUser = null;
     private String path = null;
-    
-    LogManager logManager = new LogManager();
+
 
     public DataModelingEngine(BufferedReader input, UserCredentials currentUser, String path) {
         this.input = input;
@@ -62,7 +61,7 @@ public class DataModelingEngine {
                             break;
                         } catch (InterruptedException e) {
                             //e.printStackTrace();
-                            logManager.writeCrashReportsToEventLogs(e.getMessage());
+                            LogManager.writeCrashReportsToEventLogs(e.getMessage());
                         }
                     } else {
                         if (startDataModeling(ipt.trim())) {
@@ -82,10 +81,11 @@ public class DataModelingEngine {
 
             } while (true);
         } catch (IOException e) {
-            e.printStackTrace();
+            LogManager.writeCrashReportsToEventLogs(e.getLocalizedMessage());
+//            e.printStackTrace();
         } catch (InterruptedException e) {
-            logManager.writeCrashReportsToEventLogs(e.getMessage());
-            e.printStackTrace();
+            LogManager.writeCrashReportsToEventLogs(e.getLocalizedMessage());
+            //e.printStackTrace();
         }
     }
 
@@ -105,7 +105,7 @@ public class DataModelingEngine {
             dataModel.close();
             result = true;
         } catch (Exception e) {
-
+            LogManager.writeCrashReportsToEventLogs(e.getLocalizedMessage());
         }
         return result;
     }
@@ -125,7 +125,7 @@ public class DataModelingEngine {
                     for (String cols : columnNames) {
                         String[] col = cols.split(" ");
                         if (!col[0].startsWith("primary") && !col[0].startsWith("foreign"))
-                            sb.append(String.format("%20s %20s %20s\r\n", col[0], col[1], col.length == 3 ? col[2] : "")); // you can add the length of the data type here
+                            sb.append(String.format("%20s %20s %20s\r\n", col[0], col[1], col.length == 3 ? col[2] : "default 10")); // you can add the length of the data type here
                     }
                     String format = String.format("------------------------------------------------------------------\n%20s %20s \r\n", "key", "Column");
                     String keys = format;
@@ -157,7 +157,8 @@ public class DataModelingEngine {
             }
         } catch (Exception e) {
             // should write the error to log
-            System.err.println(e.getLocalizedMessage());
+//            System.err.println(e.getLocalizedMessage());
+            LogManager.writeCrashReportsToEventLogs(e.getLocalizedMessage());
         }
         return "";
     }

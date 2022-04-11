@@ -12,7 +12,6 @@ import java.net.http.HttpResponse;
 public class Requester {
 
     private static Requester requester = null;
-    LogManager logManager = new LogManager();
 
     public Requester() {
     }
@@ -85,11 +84,11 @@ public class Requester {
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
-            logManager.writeCrashReportsToEventLogs(e.getMessage());
+//            e.printStackTrace();
+            LogManager.writeCrashReportsToEventLogs(e.getLocalizedMessage());
         } catch (InterruptedException e) {
-            logManager.writeCrashReportsToEventLogs(e.getMessage());
-            e.printStackTrace();
+            LogManager.writeCrashReportsToEventLogs(e.getLocalizedMessage());
+//            e.printStackTrace();
         }
         // if an error occurred, then we will return null instead of the response object
         return null;

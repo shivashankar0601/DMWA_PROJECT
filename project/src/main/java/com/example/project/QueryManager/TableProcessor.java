@@ -1,5 +1,6 @@
 package com.example.project.QueryManager;
 
+import com.example.project.DataExport.ExportEngine;
 import com.example.project.LogManager.LogManager;
 import com.example.project.Utilities.Utils;
 
@@ -959,4 +960,16 @@ public class TableProcessor {
         }
     }
 
+    public void listQuery(String query) {
+        if(query.equalsIgnoreCase("list tables;") || query.equalsIgnoreCase("list tables") )
+        {
+            if(Utils.currentDbName!=null || Utils.currentDbName.length()!=0) {
+                String tables = ExportEngine.getAllAvailableTables(Utils.currentDbName, true);
+                List <String>lst = Arrays.asList(tables.split(Utils.delimiter));
+                for (String s : lst){
+                    System.out.println(s);
+                }
+            }
+        }
+    }
 }
