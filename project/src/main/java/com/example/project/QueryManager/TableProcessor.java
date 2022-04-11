@@ -730,7 +730,7 @@ public class TableProcessor {
                     tableName = processedQuery.trim();
                     columnDetails = null;
                 }
-                output = selectReadTable(tableName,columnNameList,columnDetails);
+                validateTable(tableName,columnNameList,columnDetails,flag);
             }
             //if query starts with list of column names the names are stored in arraylist
             else {
@@ -743,7 +743,7 @@ public class TableProcessor {
                     for (String colName : columnList) {
                         columnNameList.add(colName.trim());
                     }
-                    output = selectReadTable(tableName,columnNameList,columnDetails);
+                    validateTable(tableName,columnNameList,columnDetails,flag);
                 } else {
                     String[] tableDetails = processedQuery.split("from");
                     tableName = tableDetails[1].trim();
@@ -752,62 +752,8 @@ public class TableProcessor {
                         columnNameList.add(colName.trim());
                     }
                     columnDetails = null;
-                    output = selectReadTable(tableName,columnNameList,columnDetails);
+                    validateTable(tableName,columnNameList,columnDetails,flag);
                 }
-            }
-            // once all the values are obtained the selectReadMTable method is called from respective conditions to obtain the required data from table
-            // this output is stored in the "output" String
-
-            // if tableName is not null then only further steps will be considered
-            if (tableName != null) {
-                //checkIfTableExists method is called to check whether the table exist in the current VM.
-                if (checkIfTableExists(tableName)) {
-                    //if table exist and the request i.e flag is set for local VM, invalid output is obtained for incorrect column names otherwise the output will be printed.
-                    if (flag.equals("local")) {
-                        if(output.equals("invalid")) {
-                            System.out.println("Column name is incorrect");
-                        } else {
-                            beautifyOutput(output,tableName);
-                            //System.out.println("output: \n" + output);
-                        }
-                        return "";
-                    }
-                    // for remote VM the output will be returned to the method to print into other VM
-                    else {
-                        return output;
-                    }
-                }
-                // if the table does not exist
-                else {
-                    // and the request is from remote so it means that it has already been checked in the other VM so we can say that table does not exist.
-                    if (flag.equals("remote")) {
-                        return "table does not exist";
-                    }
-                    // if the request is local a request will be made to the other VM through requester
-                    else {
-                        Requester requester = Requester.getInstance();
-                        String vmList = requester.requestVMDBCheck(Utils.currentDbName);
-                        //the request will be sent to other VM only if the currentDevice is the requester otherwise we can say table does not exist in both VM
-                        if (vmList.split(Utils.delimiter).length > 1 || !vmList.equals(Utils.currentDevice)) {
-                            requester.requestVMSetCurrentDbName(Utils.currentDbName);
-                            String response = requester.requestVMSelectQuery(query.replaceAll(" ", "%20"), "remote");
-                            //if the response obtained from the other VM is invalid the string invalid is returned so that while implementing transaction we can use the invalid response to return false for validating the select query
-                            if(response.equals("invalid")) {
-                                return "invalid";
-                            }
-                            // otherwise the response is printed
-                            else {
-                                System.out.println(response);
-                            }
-
-                        }
-                        else {
-                            System.out.println("table does not exist");
-                        }
-                    }
-                }
-            } else {
-                System.err.println("query is incorrect");
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -816,7 +762,64 @@ public class TableProcessor {
             System.out.println("Column name is incorrect");
         } else {
             beautifyOutput(output,tableName);
-            //System.out.println("output: \n" + output);
+
+        }
+        return "";
+    }
+    public static String validateTable(String tableName, ArrayList<String> columnNameList, String[] columnDetails, String flag) throws IOException{
+        // once all the values are obtained the selectReadMTable method is called from respective conditions to obtain the required data from table
+        // this output is stored in the "output" String
+
+        // if tableName is not null then only further steps will be considered
+        if (tableName != null) {
+            //checkIfTableExists method is called to check whether the table exist in the current VM.
+            if (checkIfTableExists(tableName)) {
+                String output = selectReadTable(tableName,columnNameList,columnDetails);
+                //if table exist and the request i.e flag is set for local VM, invalid output is obtained for incorrect column names otherwise the output will be printed.
+                if (flag.equals("local")) {
+                    if(output.equals("invalid")) {
+                        System.out.println("Column name is incorrect");
+                    } else {
+                        beautifyOutput(output,tableName);
+                    }
+                    return "";
+                }
+                // for remote VM the output will be returned to the method to print into other VM
+                else {
+                    return output;
+                }
+            }
+            // if the table does not exist
+            else {
+                // and the request is from remote so it means that it has already been checked in the other VM so we can say that table does not exist.
+                if (flag.equals("remote")) {
+                    return "table does not exist";
+                }
+                // if the request is local a request will be made to the other VM through requester
+                else {
+                    Requester requester = Requester.getInstance();
+                    String vmList = requester.requestVMDBCheck(Utils.currentDbName);
+                    //the request will be sent to other VM only if the currentDevice is the requester otherwise we can say table does not exist in both VM
+                    if (vmList.split(Utils.delimiter).length > 1 || !vmList.equals(Utils.currentDevice)) {
+                        requester.requestVMSetCurrentDbName(Utils.currentDbName);
+                        String response = requester.requestVMSelectQuery(query.replaceAll(" ", "%20"), "remote");
+                        //if the response obtained from the other VM is invalid the string invalid is returned so that while implementing transaction we can use the invalid response to return false for validating the select query
+                        if(response.equals("invalid")) {
+                            return "invalid";
+                        }
+                        // otherwise the response is printed
+                        else {
+                            System.out.println(response);
+                        }
+
+                    }
+                    else {
+                        System.out.println("table does not exist");
+                    }
+                }
+            }
+        } else {
+            System.err.println("query is incorrect");
         }
         return "";
     }
@@ -879,15 +882,6 @@ public class TableProcessor {
 
         return res;
     }
-
-
-
-
-
-
-
-
-
 
     //the extracted information from the selectQuery is passed to this method where the existing data is processed and the required value is returned
     public static String selectReadTable(String tableName, ArrayList<String> columnList, String[] keyValuePair) throws IOException {
