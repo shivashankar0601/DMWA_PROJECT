@@ -329,7 +329,7 @@ public class TableProcessor {
                 ArrayList<String> tabledata = new ArrayList<String>();
                 String st2 = "";
 
-                br2.readLine();// ignore the very first line, so i am reading and ignoring it
+                String our_query=br2.readLine();// ignore the very first line, so i am reading and ignoring it
 
                 // Adding data to arraylist line by line.
                 while ((st2 = br2.readLine()) != null) {
@@ -398,6 +398,8 @@ public class TableProcessor {
                 try {
                     FileWriter file = new FileWriter(Utils.resourcePath+Utils.currentDbName+"/"+queryTableName.toLowerCase()+".tsv", false);
                     PrintWriter writer=new PrintWriter(file);
+                    writer.append(our_query);
+                    writer.append("\n");
                     writer.append(tabledata.get(0));
                     writer.append("\n");
                     writer.append(tabledata.get(1));
@@ -531,7 +533,7 @@ public class TableProcessor {
                 ArrayList<String> tabledata = new ArrayList<String>();
                 String st2 = "";
 
-                br2.readLine();// reading a line to ignore the structure of the query
+                String our_query=br2.readLine();// reading a line to ignore the structure of the query
 
                 // Adding data to arraylist line by line.
                 while ((st2 = br2.readLine()) != null) {
@@ -611,6 +613,8 @@ public class TableProcessor {
                 try {
                     FileWriter file = new FileWriter(Utils.resourcePath+Utils.currentDbName+"/"+queryTableName.toLowerCase()+".tsv", false);
                     PrintWriter writer=new PrintWriter(file);
+                    writer.append(our_query);
+                    writer.append("\n");
                     writer.append(tabledata.get(0));
                     writer.append("\n");
                     writer.append(tabledata.get(1));
