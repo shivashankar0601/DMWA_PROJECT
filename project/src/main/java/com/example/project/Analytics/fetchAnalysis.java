@@ -47,11 +47,6 @@ public class fetchAnalysis {
             ArrayList<String> db=new ArrayList<>();
             ArrayList<String> device=new ArrayList<>();
             for(int i=0;i<queryLogs.size();i++){
-                System.out.println(queryLogs.get(i));
-                System.out.println(queryLogs.get(i).split(Utils.delimiter));
-                System.out.println(queryLogs.get(i).split(Utils.delimiter)[2]);
-                System.out.println(queryLogs.get(i).split(Utils.delimiter)[2].split(":"));
-                System.out.println(queryLogs.get(i).split(Utils.delimiter)[2].split(":")[1]);
                 if(!queryLogs.get(i).split(Utils.delimiter)[2].split(":")[1].equals("null")){
                     String local_str=queryLogs.get(i).split(Utils.delimiter)[1].split(":")[1]+"~"+
                             queryLogs.get(i).split(Utils.delimiter)[2].split(":")[1]+"~"+
@@ -72,7 +67,6 @@ public class fetchAnalysis {
             PrintWriter out1 = new PrintWriter(bw1);
             for(int i=0;i< str2.size();i++){
                 String[] ls=str2.get(i).split("~");
-//                user SDEY submitted 10 queries for DB1 running on Virtual Machine 1
                 System.out.println("user "+ls[0]+" submitted "+ls[3]+
                         " queries for "+ls[1]+" running on "+ls[2]);
                 out1.println("user "+ls[0]+" submitted "+ls[3]+
