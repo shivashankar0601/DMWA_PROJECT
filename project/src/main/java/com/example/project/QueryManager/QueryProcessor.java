@@ -21,11 +21,12 @@ public class QueryProcessor {
 
     public void begin() {
         try {
-            int option = 0;
             System.out.println("Welcome to Query Processor");
             do {
-                System.out.print("Query : ");
+                System.out.print("Query (enter 0 to exit query preocessor): ");
                 String query = input.readLine();
+                if(query.equalsIgnoreCase("0"))
+                    break;
                 // log the query and current timestamp
                 logManager.writeQueryLog(query, this.user.getName());
                 long startTime = System.currentTimeMillis();
@@ -93,7 +94,7 @@ public class QueryProcessor {
                         Utils.transQueryList.clear();
                         break;
                 }
-            } while (option != 0);
+            } while (true);
         } catch (IOException e) {
             logManager.writeCrashReportsToEventLogs(e.getMessage());
             System.out.println(e.getLocalizedMessage());

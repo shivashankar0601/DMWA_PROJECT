@@ -827,7 +827,8 @@ public class TableProcessor {
         if(output.equals("invalid") && flag.equals("remote")) {
             System.out.println("Column name is incorrect");
         } else {
-            System.out.println("output: \n" + output);
+            beautifyOutput(output,tableName);
+            //System.out.println("output: \n" + output);
         }
         return "";
     }
