@@ -240,6 +240,8 @@ public class ExportEngine {
         } else {
             // request vm to get the list of dbs
             String res[] = (Requester.getInstance().requestVMForDBs()).split(Utils.delimiter);
+            if (res.length==1 && res[0].length()==0)
+                return null;
             return Arrays.asList(res);
         }
     }

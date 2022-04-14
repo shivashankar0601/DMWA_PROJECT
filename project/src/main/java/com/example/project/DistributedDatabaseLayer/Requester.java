@@ -8,6 +8,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Arrays;
+import java.util.List;
 
 public class Requester {
 
@@ -65,6 +67,13 @@ public class Requester {
         return requestVM("readTable?table=" + tableName + "&db=" + dbName).split(Utils.delimiter);
     }
 
+    public String requestVMTableStructure(String dbName, String table) {
+        return requestVM("readStructure?table=" + table + "&db=" + dbName);
+    }
+
+    public List<String> requestVmGetColumns(String tableName, String dbName) {
+        return Arrays.asList(requestVM("getColumns?table="+tableName+"&db="+dbName).split(Utils.delimiter));
+    }
 
     // parameter is a method name with all the parameters
     private String requestVM(String mwp) {
@@ -94,7 +103,4 @@ public class Requester {
         return null;
     }
 
-    public String requestVMTableStructure(String dbName, String table) {
-        return requestVM("readStructure?table=" + table + "&db=" + dbName);
-    }
 }

@@ -57,17 +57,18 @@ public class DatabaseProcessor {
 
             // vm1 true and vm2 true return true
             if (res != null && res.length()>0 && res.contains(Utils.delimiter)) {
+                Utils.isVMRequest = false;
                 return true;
             }
             // vm1 true vm2 false return true
             else if (res != null && res.length()>0 && res.contains(Utils.currentDevice)) {
-//                Utils.isVMRequest = false;
+                Utils.isVMRequest = false;
                 return true;
             }
 
             // vm2 true vm1 false return
             else if (res != null && res.length()>0 && !res.contains(Utils.currentDevice)) {
-//                Utils.isVMRequest = true;
+                Utils.isVMRequest = true;
                 return true;
             }
 

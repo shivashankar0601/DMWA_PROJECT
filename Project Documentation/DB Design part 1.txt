@@ -1,0 +1,61 @@
+we need to create a service that will enable us to contact our database that is up and running (https://medium.com/@lk.snatch/jar-file-as-windows-service-bonus-jar-to-exe-1b7b179053e4)
+
+select port through which you can make requests and start communicating with it (65000)
+
+run jar files remotely (ssh remote@machine.com 'java -jar hellofile.jar') (https://stackoverflow.com/questions/34395168/execute-jar-file-from-remote-machine-in-java)
+
+GDD format (gdd.tsv)
+----------
+Username~DatabaseName
+
+
+
+
+write logic to store the information in the above format and create a file inside the user directory (extension .tsv)
+
+write logic to check if the user is trying to access the local or global database
+
+
+
+
+when selecting the database, we need to check which virtual machines should be selected for the data processing
+
+request forwarder : use database query only (username and databasename)
+	- send request to check the database availability (on success, we will let user know that the database is available)
+	- send request for query processing on remote database (username, databasename, query)
+	- table queries handling api should be written to help hardee and manali (interface)
+
+request handler (waiting for requests)
+	- checker to check if the requested database is available or not (if available, choose it)
+	- query handler(username, databasename, query) - normal query handler)
+
+2 services - send and receive
+
+
+
+
+
+
+create global data dictionary as at the time of creation of user so you can append the data to the file when the database is created later on
+
+
+
+
+only one session from one virtual machine
+
+
+
+VM1
+
+emp name, emp id, emp add
+1
+2
+3
+
+
+V2
+emp name, emp id, emp add
+4
+5
+6
+7

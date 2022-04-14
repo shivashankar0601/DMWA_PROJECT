@@ -106,14 +106,14 @@ public class QueryProcessor {
     }
 
     public int queryParser(String query) {
-        if (query.toLowerCase().contains("table") || query.toLowerCase().contains("insert") || query.toLowerCase().contains("update") || query.toLowerCase().contains("delete") || query.toLowerCase().contains("select"))
+        if (query.toLowerCase().contains("show"))
+            return 4;
+        else if (query.toLowerCase().contains("table") || query.toLowerCase().contains("insert") || query.toLowerCase().contains("update") || query.toLowerCase().contains("delete") || query.toLowerCase().contains("select"))
             return 1;
         else if (query.toLowerCase().contains("start transaction") )
             return 2;
         else if (query.toLowerCase().contains("commit"))
             return 3;
-        else if (query.toLowerCase().contains("list"))
-            return 4;
         else
             return 0;
     }

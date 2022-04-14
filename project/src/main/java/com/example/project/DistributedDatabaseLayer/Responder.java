@@ -86,4 +86,13 @@ public class Responder {
         return DataModelingEngine.getTableStructure(tableName, dbName);
     }
 
+    @RequestMapping(value = "/getColumns", params = "table", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public String getTablecolumns(@RequestParam(value = "table", defaultValue = "") String tableName, @RequestParam(value = "db", defaultValue = "") String dbName) {
+        return StringUtils.join(TableProcessor.getColumnsFromTable(tableName, dbName, false));
+    }
+
+
+
+
+
 }
